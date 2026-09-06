@@ -5,3 +5,10 @@
 #
 # [agents.bmad-agent-pm]
 # description = "Prefers short, bulleted PRDs over narrative drafts."
+
+# The installer recorded `project_name = "dev-easy-test-api"` from the directory name.
+# The project was renamed to enrich-test-api and the Maven coordinates are
+# `com.enrichmeai:enrich-test-api`. Pinned here rather than in `_bmad/config.toml`,
+# which the installer regenerates.
+[core]
+project_name = "enrich-test-api"
