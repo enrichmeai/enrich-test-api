@@ -28,7 +28,7 @@
   | artifactId (parent) | `dev-easy-test` | `enrich-test-api` |
 
   `com.enrichmeai` follows `enrichmeai.com`, the domain this project demonstrably
-  owns and the one on its GitHub Pages certificate. Module artifactIds
+  owns and the one the organisation's site is served on. Module artifactIds
   (`test-core`, `test-cloud-aws`, `test-feature`) are unchanged.
 - **The repository is renamed** `dev-easy-test-api` to `enrich-test-api`. GitHub
   redirects the old URLs. Badge, SCM and clone URLs are updated.
@@ -43,10 +43,33 @@
 - OWASP Dependency-Check moved out of the default lifecycle into an `owasp` profile,
   at one version shared by the POM and CI.
 - JaCoCo coverage floors are now per module and set to measured values. See README.
+- Story 6.2's premise in `docs/specs/epics.md` was wrong and is corrected. It claimed the
+  `.gitignore` patterns `src/main/resources/` and `src/test/resources/` matched at every
+  depth. A pattern with a mid-pattern separator is anchored to its own directory, so both
+  are root-anchored and inert in this multi-module layout. Verified with
+  `git check-ignore -v --no-index`. The lines are still dead and still misleading, which is
+  why the story survives.
+- Story 1.2's acceptance criteria described `AwsDynamoDB` surfacing provider errors. It
+  swallows them and returns `null` or an empty list. The criteria now match the code.
+- The PRD's provenance pointed at a branch that has since been merged and deleted; it now
+  tracks `main` at `3f31287`. PRD open question 6 is marked resolved, pointing at ADR 0006.
 
 ### Added
 - BMAD Method 6.12.0 and four planning artifacts under `docs/specs/`: product brief,
   PRD, architecture spine and epics.
+- ADR 0006 records that GitHub Pages is disabled for this repository, and why. The
+  decision had been taken but existed only in a pull request in another repository.
+- `docs/specs/implementation/`: expanded story files for the seven stories that can be
+  built without a maintainer decision, plus a generated `sprint-status.yaml` covering all
+  25 stories.
+- `docs/specs/implementation-readiness.md`: the readiness verdict, and the five open
+  decisions that block the remaining eighteen stories.
+- Epic 7 in `docs/specs/epics.md`, from three defects found while reading the code the
+  coverage stories point at: `CloudExtension` never tracks or releases topics and tables,
+  its cleanup swallows `Throwable` silently, and `AwsDynamoDB` caches table key schemas in
+  a static map that `deleteTable` does not evict.
+- Story 1.5, because Epic 1's coverage arithmetic left no margin: stories 1.2 and 1.3
+  expose 98 uncovered branches against a need of 79.
 
 ### Removed
 - The 18 legacy 2018 classes under `test-feature/src/main/java/org/deveasy/test/feature/`
