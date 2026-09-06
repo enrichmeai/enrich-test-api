@@ -22,9 +22,9 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: Spotless check
-        run: mvn -q -DskipTests=true spotless:check
+        run: mvn -B -DskipTests=true spotless:check
       - name: Checkstyle
-        run: mvn -q -DskipTests=true checkstyle:check
+        run: mvn -B -DskipTests=true checkstyle:check
 
   static:
     name: Static/build hygiene (Enforcer)
@@ -38,10 +38,10 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: Enforcer validate
-        run: mvn -q -DskipTests=true validate
+        run: mvn -B -DskipTests=true validate
 
   errorprone:
-    name: Error Prone (strict/ERROR)
+    name: Error Prone
     runs-on: ubuntu-latest
     needs: static
     steps:
@@ -51,13 +51,17 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: 'maven'
-      - name: Compile with Error Prone profile (strict)
-        run: mvn -q -DskipTests=true -Perrorprone verify
+      # Compiles main and test sources with Error Prone on javac's processor
+      # path. Findings at ERROR severity fail the build; WARN findings do not.
+      - name: Compile with Error Prone profile
+        run: mvn -B -DskipTests=true -Perrorprone verify
 
   deps:
-    name: Dependencies audit (OWASP report-only)
+    name: Dependencies audit (OWASP)
     runs-on: ubuntu-latest
     needs: errorprone
+    env:
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -65,29 +69,21 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: 'maven'
+      # dependency-check cannot populate its database without an NVD API key, so
+      # this step is skipped until the NVD_API_KEY secret exists on the repo.
+      # The plugin version is NOT repeated here: the `owasp` profile in pom.xml
+      # declares it, and a direct goal invocation resolves the declared version.
       - name: OWASP Dependency-Check
-        run: mvn -B -q org.owasp:dependency-check-maven:9.2.0:check
+        if: ${{ env.NVD_API_KEY != '' }}
+        run: mvn -B -Powasp org.owasp:dependency-check-maven:check
+      - name: Report that the audit was skipped
+        if: ${{ env.NVD_API_KEY == '' }}
+        run: |
+          echo "::warning::OWASP Dependency-Check skipped: no NVD_API_KEY secret is set on this repository."
       - name: Upload OWASP reports
-        if: always()
+        if: ${{ always() && env.NVD_API_KEY != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: owasp-dependency-check
           path: |
             **/target/dependency-check-report.*
-
-  coverage:
-    name: Coverage thresholds (JaCoCo)
-    runs-on: ubuntu-latest
-    needs: deps
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-          cache: 'maven'
-      - name: Build & test (verify)
-        run: mvn -B -DskipTests=false verify
-      - name: Check coverage thresholds
-        run: |
-          mvn jacoco:check -Djacoco.line.coverage=0.80 -Djacoco.branch.coverage=0.70

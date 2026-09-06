@@ -26,8 +26,11 @@ jobs:
         run: |
           docker version
           docker info
-      - name: Build & test (full verify)
-        run: mvn -B -q -DskipTests=false verify
+      # A plain `verify` runs unit tests (Surefire), the LocalStack integration
+      # tests and Cucumber suites (Failsafe), Spotless, Checkstyle, Enforcer and
+      # the per-module JaCoCo coverage floors. No skip flags.
+      - name: Build and test (full verify)
+        run: mvn -B verify
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -36,20 +39,8 @@ jobs:
           path: |
             **/target/surefire-reports/*
             **/target/failsafe-reports/*
-
-  coverage:
-    name: Coverage (JaCoCo HTML)
-    runs-on: ubuntu-latest
-    needs: tests
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-          cache: 'maven'
-      - name: Aggregate coverage (verify)
-        run: mvn -q -DskipTests=true verify -pl :dev-easy-test -am
+      # Produced by the same run above, so the HTML always matches the tests
+      # that were actually executed.
       - name: Upload coverage (JaCoCo HTML)
         if: always()
         uses: actions/upload-artifact@v4
