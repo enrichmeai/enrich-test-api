@@ -4,14 +4,12 @@
  */
 package org.deveasy.test.core.cloud;
 
-/**
- * Normalized service categories across cloud vendors.
- */
+/** Normalized service categories across cloud vendors. */
 public enum CloudServiceType {
-    STORAGE,
-    QUEUE,
-    PUBSUB,
-    NOSQL,
-    SECRETS,
-    KMS
+  STORAGE,
+  QUEUE,
+  PUBSUB,
+  NOSQL,
+  SECRETS,
+  KMS
 }

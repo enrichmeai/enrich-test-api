@@ -4,11 +4,9 @@
  */
 package org.deveasy.test.core.cloud;
 
-/**
- * Supported cloud providers for standardized testing.
- */
+/** Supported cloud providers for standardized testing. */
 public enum CloudProvider {
-    AWS,
-    AZURE,
-    GCP
+  AWS,
+  AZURE,
+  GCP
 }
