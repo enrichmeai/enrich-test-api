@@ -3,8 +3,10 @@ name: quality-gates
 on:
   push:
     branches: [ main ]
+  # No branch filter here on purpose: a stacked pull request whose base is another
+  # feature branch must still be tested. Filtering pull_request to `main` silently
+  # gave stacked PRs no CI at all.
   pull_request:
-    branches: [ main ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
