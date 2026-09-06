@@ -83,7 +83,14 @@ class: assert against the underlying fake, not against the tracking set. The sam
 delete. Both `receive` overloads are called, including the `Duration` one.
 
 **AC-6 — the number moves for the right reason.** `mvn -B -pl test-core verify` reports test-core
-branch coverage at or above 0.70 and line coverage at or above 0.80.
+branch coverage at or above 0.70. This story owns that target outright: 30 of the module's 32
+uncovered branches are here.
+
+It does **not** own the module's line target. This story touches 50 of test-core's 74 uncovered
+lines and the module needs 39, so satisfying 0.80 from here alone would mean covering 78% of
+everything in reach — the same no-slack trap Story 1.5 was created to avoid on the other module.
+Story 1.6 covers the four small classes holding the other 24 lines. Do not stretch this story to
+reach a line number.
 
 ## Out of scope
 

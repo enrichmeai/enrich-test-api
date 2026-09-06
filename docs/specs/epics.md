@@ -61,6 +61,23 @@ against a need of 79, which is feasible but leaves almost no slack: it would req
 covering roughly four fifths of everything they touch. Story 1.5 exists to provide that
 headroom.
 
+**test-core's line target has the same no-slack shape, and needs the same answer.** Story 1.1
+touches `CloudExtension` and its two nested tracking types, which hold 50 of the module's 74
+uncovered lines. The module needs 39. Leaving the line target to Story 1.1 alone would demand
+78% of everything it touches — the failure mode diagnosed above for the other module, repeated.
+The remaining 24 uncovered lines are in four small classes and are cheap:
+
+| Class | Uncovered lines |
+|---|---|
+| `CloudServiceType` | 7 |
+| `CloudAdapters` | 7 |
+| `TestCloudConfig` | 6 |
+| `TestCloudConfig.Builder` | 4 |
+
+Story 1.6 covers them. Note that `CloudServiceType`'s 7 lines are also touched by Story 6.4,
+which may delete the enum values outright; whichever lands first, the other should be re-read
+rather than assumed.
+
 **A guard, carried into every story below.** SM-C2 in the PRD names the failure mode
 directly: coverage bought with tests that assert nothing is worse than a low honest number.
 Every acceptance criterion here names a behaviour, not a percentage. A test that executes a
@@ -82,7 +99,8 @@ type; a missing capability on a present adapter fails with a message naming the 
 a class without `@WithCloud` raises `ExtensionConfigurationException`; tracked buckets and
 queues are released after the test class; `TrackingQueue` is exercised at all, including
 that `deleteQueue` removes the name from the tracking set. test-core branch coverage is at
-or above 0.70.
+or above 0.70 — this story owns the module's branch target outright. It does **not** own the
+line target; Story 1.6 carries the rest of that.
 
 Expanded: `docs/specs/implementation/1-1-cover-cloudextension.md`.
 
@@ -148,6 +166,23 @@ Acceptance: the not-found and empty-result paths of `AwsBlobStorage.getObject`, 
 returned value or the thrown type, not on the call completing.
 
 Expanded: `docs/specs/implementation/1-5-cover-the-remaining-aws-capability-error-paths.md`.
+
+### Story 1.6: Cover the remaining test-core classes
+
+As a maintainer, test-core's line target does not rest entirely on one story.
+
+Context: added for the same reason as Story 1.5, after checking that Epic 1's arithmetic closed
+with margin on both modules rather than only one. `CloudServiceType` 0 of 7 lines, `CloudAdapters`
+13 of 20, `TestCloudConfig` 8 of 14, `TestCloudConfig.Builder` 11 of 15. None has meaningful
+branching; this is the cheapest work in the epic.
+
+Acceptance: every `CloudServiceType` value is exercised; `CloudAdapters` is covered for the
+adapter-found and adapter-absent paths, and the absent path is asserted to name the provider
+rather than throwing `NoSuchElementException`, which is FR-3's stated consequence;
+`TestCloudConfig` round-trips every field through the builder, and the built value is asserted
+immutable by the absence of setters rather than by comment.
+
+Expanded: `docs/specs/implementation/1-6-cover-the-remaining-test-core-classes.md`.
 
 ---
 

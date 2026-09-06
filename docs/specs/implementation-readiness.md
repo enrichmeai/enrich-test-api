@@ -14,7 +14,7 @@ that nothing records?**
 
 ## Verdict: CONCERNS
 
-Partly. Seven of the twenty-five stories can be built today from what is written down. Six cannot be
+Partly. Eight of the twenty-six stories can be built today from what is written down. Six cannot be
 built by anyone, at any skill level, because they are not implementation problems — they are choices
 only the maintainer can make. The remaining twelve sit downstream of those six.
 
@@ -33,6 +33,7 @@ numbers, method names and acceptance criteria written against code that was read
 | 1.3 Cover `AwsClients` and `LocalStackHolder` | Ready with one flagged assumption and one design choice the story forces into the open |
 | 1.4 Raise the floors | Mechanical, once 1.1–1.3 and 1.5 land |
 | 1.5 Cover the remaining AWS capability error paths | Added by this pass; see below |
+| 1.6 Cover the remaining test-core classes | Added by this pass, for the same reason as 1.5 |
 | 6.2 Correct the `.gitignore` patterns | Premise re-verified and corrected |
 | 6.3 Remove the inert publishing configuration | All seven items located by line number |
 
@@ -77,10 +78,17 @@ is anchored to its own directory, so both are root-anchored and inert in this mu
 Verified with `git check-ignore -v --no-index`. The story survives — the lines are still dead and
 still misleading — but on honest grounds.
 
-**Epic 1's arithmetic did not close with enough margin, so Story 1.5 was added.** Stories 1.2 and
-1.3 expose 98 uncovered branches in `test-cloud-aws` against a need of 79. That is a pass on paper
-that requires covering four fifths of everything they touch. Story 1.5 adds 48 more reachable
-branches so a single awkward path does not sink the epic.
+**Epic 1's arithmetic did not close with enough margin on either module, so Stories 1.5 and 1.6
+were added.** In `test-cloud-aws`, Stories 1.2 and 1.3 expose 98 uncovered branches against a need
+of 79 — a pass on paper that requires covering four fifths of everything they touch. Story 1.5 adds
+48 more reachable branches.
+
+`test-core` has the same shape and it was nearly missed. Story 1.1 reaches 50 of the module's 74
+uncovered lines against a need of 39, which is 78% of everything in scope. Its acceptance criteria
+had also inherited a demand for the module's 0.80 line target, which that story cannot responsibly
+own. The criterion now claims only the branch target, which Story 1.1 does own outright — 30 of the
+module's 32 uncovered branches — and Story 1.6 takes the 24 cheap lines in `CloudServiceType`,
+`CloudAdapters` and `TestCloudConfig`.
 
 **Epic 7 is new, from reading the code the stories point at.** Three defects, none previously
 recorded:
@@ -113,7 +121,7 @@ a floor below what the build achieves is permission to regress by the size of th
 
 ## Next
 
-- `docs/specs/implementation/sprint-status.yaml` tracks all 25 stories. Regenerate it after any
+- `docs/specs/implementation/sprint-status.yaml` tracks all 26 stories. Regenerate it after any
   epic title changes, since keys derive from titles.
 - Start with Story 1.1: it holds 30 of test-core's 32 uncovered branches, so nothing else in that
   module moves the floor.
