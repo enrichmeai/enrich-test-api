@@ -1,7 +1,7 @@
-# Dev Easy Test API for Java
+# enrich-test-api
 
-[![Build](https://github.com/enrichmeai/dev-easy-test-api/actions/workflows/build.yml/badge.svg)](https://github.com/enrichmeai/dev-easy-test-api/actions/workflows/build.yml)
-[![Quality gates](https://github.com/enrichmeai/dev-easy-test-api/actions/workflows/quality-gates.yml/badge.svg)](https://github.com/enrichmeai/dev-easy-test-api/actions/workflows/quality-gates.yml)
+[![Build](https://github.com/enrichmeai/enrich-test-api/actions/workflows/build.yml/badge.svg)](https://github.com/enrichmeai/enrich-test-api/actions/workflows/build.yml)
+[![Quality gates](https://github.com/enrichmeai/enrich-test-api/actions/workflows/quality-gates.yml/badge.svg)](https://github.com/enrichmeai/enrich-test-api/actions/workflows/quality-gates.yml)
 ![Java](https://img.shields.io/badge/Java-17-blue)
 ![License](https://img.shields.io/badge/License-Apache_2.0-green)
 
@@ -10,6 +10,19 @@ A toolkit for testing Java applications against cloud services, using local emul
 The core defines small, provider-neutral capability interfaces. Provider adapters implement them and keep the vendor SDKs to themselves. Tests written against the core do not name a cloud provider.
 
 Status: early-stage private alpha. AWS is the only provider, and only in emulator mode.
+
+
+## Coordinates
+
+| | |
+| --- | --- |
+| groupId | `com.enrichmeai` |
+| artifactId | `enrich-test-api` (parent) |
+| version | `0.3.0-alpha1-private.1` |
+| modules | `test-core`, `test-cloud-aws`, `test-feature` |
+
+The Java packages are still `org.deveasy.*`. Renaming them is a breaking API change
+across every source file and is deliberately not part of the coordinate rebrand.
 
 
 ## Project structure (modules)
@@ -114,6 +127,21 @@ GitHub Actions, two workflows, both triggered on pushes and pull requests agains
 - `quality-gates.yml` runs Spotless and Checkstyle, then Enforcer, then Error Prone, then the OWASP audit.
 
 The OWASP job is skipped unless an `NVD_API_KEY` secret is present on the repository, because Dependency-Check cannot build its database without one. The job annotates the run when it skips.
+
+
+## Specifications
+
+BMAD Method 6.12.0 is installed in this repo. The planning artifacts live in `docs/specs/`:
+
+| Document | Contents |
+| --- | --- |
+| [product-brief.md](docs/specs/product-brief.md) | Problem, solution, users, scope |
+| [PRD.md](docs/specs/PRD.md) | Glossary, user journeys, FR-1 to FR-10, non-goals, open questions |
+| [architecture.md](docs/specs/architecture.md) | Ports-and-adapters spine, AD-1 to AD-9, stack, dependency-direction diagram |
+| [epics.md](docs/specs/epics.md) | Six epics of work not yet done, including the coverage gap |
+
+The specs describe the tree as it is, with gaps named as gaps. Architecture decision
+records remain in `docs/adr/`.
 
 
 ## Contributing

@@ -43,7 +43,7 @@ Floors are set to these measured values. The target of line 0.80 and branch 0.70
 ## Known limitations
 
 - AWS is the only provider. There is no Azure or GCP adapter.
-- EMULATOR mode only. REAL mode is untested.
+- `CloudMode.EMULATOR` only. `CloudMode.LIVE` is declared in the enum but no adapter path is tested against a real account.
 - Docker is required for `mvn verify`; there is no Docker-free profile.
 - The OWASP audit does not run in CI until an `NVD_API_KEY` secret is added.
 

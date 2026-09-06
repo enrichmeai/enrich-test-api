@@ -48,5 +48,5 @@
 
 ### Known Limitations
 - Only AWS provider implemented
-- EMULATOR mode only (REAL mode needs additional testing)
+- EMULATOR mode only (`CloudMode.LIVE` needs additional testing)
 - No Azure or GCP adapters yet
