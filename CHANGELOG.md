@@ -19,11 +19,34 @@
   branch was `master`, so neither had ever run.
 
 ### Changed
+- **BREAKING: Maven coordinates.** The groupId and the parent artifactId both change.
+  Consumers must update their dependency declarations.
+
+  | | Before | After |
+  | --- | --- | --- |
+  | groupId | `org.deveasy` | `com.enrichmeai` |
+  | artifactId (parent) | `dev-easy-test` | `enrich-test-api` |
+
+  `com.enrichmeai` follows `enrichmeai.com`, the domain this project demonstrably
+  owns and the one on its GitHub Pages certificate. Module artifactIds
+  (`test-core`, `test-cloud-aws`, `test-feature`) are unchanged.
+- **The repository is renamed** `dev-easy-test-api` to `enrich-test-api`. GitHub
+  redirects the old URLs. Badge, SCM and clone URLs are updated.
+- **Java packages are deliberately NOT renamed.** They remain `org.deveasy.*` and no
+  longer match the groupId. Renaming them is a breaking change across every source
+  file and would also rename both
+  `META-INF/services/org.deveasy.test.core.cloud.spi.CloudAdapter` registration
+  files, whose names derive from the interface's fully qualified name. Tracked as
+  Epic 2 in `docs/specs/epics.md`; the decision is open.
 - Dependency versions are centralised in the parent as BOM imports (AWS SDK v2,
   Testcontainers, JUnit, Cucumber, Jackson), per ADR 0005.
 - OWASP Dependency-Check moved out of the default lifecycle into an `owasp` profile,
   at one version shared by the POM and CI.
 - JaCoCo coverage floors are now per module and set to measured values. See README.
+
+### Added
+- BMAD Method 6.12.0 and four planning artifacts under `docs/specs/`: product brief,
+  PRD, architecture spine and epics.
 
 ### Removed
 - The 18 legacy 2018 classes under `test-feature/src/main/java/org/deveasy/test/feature/`

@@ -10,7 +10,7 @@ updated: '2026-09-06'
 
 ## 0. Document Purpose
 
-This PRD is for the maintainer and any contributor picking up work on `com.enrichmeai:enrich-test-api`. It is written against the tree at commit `075e283`, and every capability described below was executed in a green `mvn -B verify` run, not read off documentation. It is a developer-product PRD, so it carries the API-contract and dependency-policy clusters and drops the consumer-product ones. It builds on the five ADRs in `docs/adr/` rather than restating them; where an ADR already settles a decision it is referenced, not duplicated. The companion architecture spine is `docs/specs/architecture.md`.
+This PRD is for the maintainer and any contributor picking up work on `com.enrichmeai:enrich-test-api`. It is written against the tree on the `chore/rebrand-and-bmad-specs` branch, at or after the coordinate rebrand in `f2b2c5e`, and every capability described below was executed in a green `mvn -B verify` run, not read off documentation. It is a developer-product PRD, so it carries the API-contract and dependency-policy clusters and drops the consumer-product ones. It builds on the five ADRs in `docs/adr/` rather than restating them; where an ADR already settles a decision it is referenced, not duplicated. The companion architecture spine is `docs/specs/architecture.md`.
 
 ## 1. Vision
 
