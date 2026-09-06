@@ -9,11 +9,7 @@
     <name>dev easy test feature</name>
     <description>dev easy test feature</description>
 
-    <properties>
-        <junit.jupiter.version>5.10.2</junit.jupiter.version>
-        <cucumber.version>7.15.0</cucumber.version>
-    </properties>
-
+    <!-- Versions come from the parent's imported BOMs (ADR 0005). -->
     <dependencies>
         <dependency>
             <groupId>org.deveasy</groupId>
@@ -40,31 +36,40 @@
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-java</artifactId>
-            <version>${cucumber.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-junit-platform-engine</artifactId>
-            <version>${cucumber.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>${junit.jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-suite-api</artifactId>
-            <version>1.10.2</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Engine that actually executes @Suite classes. Without it CucumberQueueSuite
+             is discovered but runs zero tests, so the .feature files never execute. -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite-engine</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.skyscreamer</groupId>
             <artifactId>jsonassert</artifactId>
-            <version>1.5.1</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Used by the NoSqlTable Cucumber glue to parse inline JSON payloads -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -73,7 +78,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.5</version>
             </plugin>
         </plugins>
     </build>
