@@ -26,7 +26,7 @@ Six pieces in `pom.xml`, all verified present at these lines:
 
 | Lines | What | Why it is dead |
 |---|---|---|
-| 73–75 | `<pluginRepository>` for `oss.sonatype.org/content/repositories/releases` | The host is decommissioned. This is the one entry with a live cost: it sits in the plugin resolution path. |
+| 73–75 | `<pluginRepository>` for `oss.sonatype.org/content/repositories/releases` | The host is decommissioned. See the note below on whether this costs anything. |
 | 85–94 | `<distributionManagement>` with OSSRH snapshot and staging repositories | Nothing runs `deploy`. |
 | 167–195 | `sign-source-javadoc` profile attaching sources and javadoc jars | Never activated; exists to satisfy Central's requirements. |
 | 424–426 | `nexus-staging-maven-plugin` 1.6.7 in `<pluginManagement>` | Version pin for a plugin nothing invokes. |
@@ -41,12 +41,21 @@ And one that is not merely dead but broken:
 `errorprone` and `owasp`. Anyone running a release would activate a profile that does not exist and
 get no signing, no sources and no javadoc.
 
-## Why the pluginRepository is the one to prioritise
+## The pluginRepository, and a claim not to make
 
-Maven consults `<pluginRepositories>` when a plugin is not already resolved locally. `oss.sonatype.org`
-no longer serves that content, so on a cold local repository or a CI runner with an empty cache,
-every plugin resolution that misses Central also attempts a dead host. That is latency at best and a
-build failure at worst, and it is invisible until it happens.
+It is tempting to describe this entry as a live hazard: a decommissioned host sitting in the plugin
+resolution path, costing latency on every cold build. **That has not been verified, and the ordering
+argues against it.** Maven consults plugin repositories in declaration order, and `central` is
+declared first at lines 69–72. A plugin that resolves from Central never reaches the `sonatype.org`
+entry — and every plugin this POM uses comes from Central.
+
+So the honest position is that this is dead configuration like the other six, and it goes for the
+same reason: it describes a resolution path the project does not use.
+
+If someone wants the stronger claim, it is cheap to test: run
+`mvn -B -Dmaven.repo.local=/tmp/cold-repo verify` against an empty local repository and watch
+whether anything actually reaches `oss.sonatype.org`. Do that before asserting a cost, or drop the
+assertion.
 
 ## Acceptance criteria
 
