@@ -1,32 +1,32 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.deveasy</groupId>
-        <artifactId>dev-easy-test</artifactId>
+        <groupId>com.enrichmeai</groupId>
+        <artifactId>enrich-test-api</artifactId>
         <version>0.3.0-alpha1-private.1</version>
     </parent>
     <artifactId>test-feature</artifactId>
-    <name>dev easy test feature</name>
-    <description>dev easy test feature</description>
+    <name>enrich test feature</name>
+    <description>enrich test feature</description>
 
     <!-- Versions come from the parent's imported BOMs (ADR 0005). -->
     <dependencies>
         <dependency>
-            <groupId>org.deveasy</groupId>
+            <groupId>com.enrichmeai</groupId>
             <artifactId>test-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <!-- Bring AWS adapter on test classpath so ServiceLoader finds it during Cucumber runs -->
         <dependency>
-            <groupId>org.deveasy</groupId>
+            <groupId>com.enrichmeai</groupId>
             <artifactId>test-cloud-aws</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
             <exclusions>
                 <!-- Avoid duplicate classes: test-core is already a direct dependency of this module -->
                 <exclusion>
-                    <groupId>org.deveasy</groupId>
+                    <groupId>com.enrichmeai</groupId>
                     <artifactId>test-core</artifactId>
                 </exclusion>
             </exclusions>

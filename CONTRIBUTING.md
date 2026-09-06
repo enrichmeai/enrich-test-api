@@ -1,4 +1,4 @@
-# Contributing to Dev Easy Test API
+# Contributing to enrich-test-api
 
 We welcome contributions! This guide will help you get started.
 
@@ -12,8 +12,8 @@ We welcome contributions! This guide will help you get started.
 2. **Clone and Build:**
 
 ```bash
-git clone https://github.com/enrichmeai/dev-easy-test-api.git
-cd dev-easy-test-api
+git clone https://github.com/enrichmeai/enrich-test-api.git
+cd enrich-test-api
 mvn clean verify
 ```
 
