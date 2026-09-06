@@ -59,17 +59,20 @@
   PRD, architecture spine and epics.
 - ADR 0006 records that GitHub Pages is disabled for this repository, and why. The
   decision had been taken but existed only in a pull request in another repository.
-- `docs/specs/implementation/`: expanded story files for the seven stories that can be
+- `docs/specs/implementation/`: expanded story files for the eight stories that can be
   built without a maintainer decision, plus a generated `sprint-status.yaml` covering all
-  25 stories.
+  26 stories.
 - `docs/specs/implementation-readiness.md`: the readiness verdict, and the five open
   decisions that block the remaining eighteen stories.
 - Epic 7 in `docs/specs/epics.md`, from three defects found while reading the code the
   coverage stories point at: `CloudExtension` never tracks or releases topics and tables,
   its cleanup swallows `Throwable` silently, and `AwsDynamoDB` caches table key schemas in
   a static map that `deleteTable` does not evict.
-- Story 1.5, because Epic 1's coverage arithmetic left no margin: stories 1.2 and 1.3
-  expose 98 uncovered branches against a need of 79.
+- Stories 1.5 and 1.6, because Epic 1's coverage arithmetic left no margin on either
+  module. In `test-cloud-aws`, stories 1.2 and 1.3 expose 98 uncovered branches against a
+  need of 79; in `test-core`, story 1.1 reaches 50 uncovered lines against a need of 39.
+  Each new story takes the cheap remainder so neither target rests on one story delivering
+  four fifths of everything it touches.
 
 ### Removed
 - The 18 legacy 2018 classes under `test-feature/src/main/java/org/deveasy/test/feature/`

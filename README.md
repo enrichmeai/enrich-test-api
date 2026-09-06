@@ -142,7 +142,7 @@ BMAD Method 6.12.0 is installed in this repo. The planning artifacts live in `do
 | [implementation-readiness.md](docs/specs/implementation-readiness.md) | Which stories can be built now, and the decisions that block the rest |
 | [implementation/](docs/specs/implementation/) | Expanded story files for the unblocked work, and `sprint-status.yaml` |
 
-Seven of the twenty-five stories are expanded to file-and-line detail and can be picked up
+Eight of the twenty-six stories are expanded to file-and-line detail and can be picked up
 today. Six are blocked on decisions only the maintainer can make — five questions, one of
 which gates two stories — so they are deliberately left at epic grain rather than expanded
 into invented answers. `implementation-readiness.md` lists them.
