@@ -99,7 +99,7 @@ JaCoCo floors are set per module to the ratios each module actually reaches. The
 
 | Module | Line covered | Line floor | Branch covered | Branch floor |
 | --- | --- | --- | --- | --- |
-| test-core | 104/178, 0.58 | 0.58 | 14/46 , 0.30 | 0.30 |
+| test-core | 104/178, 0.58 | 0.58 | 14/46, 0.30 | 0.30 |
 | test-cloud-aws | 344/516, 0.66 | 0.66 | 81/228, 0.35 | 0.35 |
 | test-feature | no main sources | none | no main sources | none |
 
