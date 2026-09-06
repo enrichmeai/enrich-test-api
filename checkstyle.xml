@@ -8,10 +8,9 @@
 <module name="Checker">
     <property name="severity" value="error"/>
 
-    <!-- Limit scope to Java files -->
-    <module name="FileExtensions">
-        <property name="fileExtensions" value="java"/>
-    </module>
+    <!-- Limit scope to Java files. `fileExtensions` is a Checker property; there is no
+         `FileExtensions` module. -->
+    <property name="fileExtensions" value="java"/>
 
     <module name="TreeWalker">
         <!-- Imports hygiene -->

@@ -1,93 +1,66 @@
 # Dev Easy Test API for Java
 
-[![Build](https://github.com/GSSoftwareConsultancy/dev-easy-test-api/actions/workflows/build.yml/badge.svg)](https://github.com/GSSoftwareConsultancy/dev-easy-test-api/actions/workflows/build.yml)
+[![Build](https://github.com/enrichmeai/dev-easy-test-api/actions/workflows/build.yml/badge.svg)](https://github.com/enrichmeai/dev-easy-test-api/actions/workflows/build.yml)
+[![Quality gates](https://github.com/enrichmeai/dev-easy-test-api/actions/workflows/quality-gates.yml/badge.svg)](https://github.com/enrichmeai/dev-easy-test-api/actions/workflows/quality-gates.yml)
 ![Java](https://img.shields.io/badge/Java-17-blue)
 ![License](https://img.shields.io/badge/License-Apache_2.0-green)
 
-A community-driven toolkit to make testing Java applications easier and more consistent across frameworks.
+A toolkit for testing Java applications against cloud services, using local emulators rather than real cloud accounts.
 
-This project aims to reduce boilerplate and provide a unified, framework-agnostic approach for writing integration and end-to-end tests, with first-class support for BDD using Cucumber.
+The core defines small, provider-neutral capability interfaces. Provider adapters implement them and keep the vendor SDKs to themselves. Tests written against the core do not name a cloud provider.
 
-Status: Early-stage. GitHub Actions is our only CI. We follow trunk-based development with small, frequent commits that keep main green.
-
-
-## Why this project?
-Modern Java teams build services with a wide range of frameworks (Spring, Spring Boot, Dropwizard, Guice, etc.). Each ecosystem offers different guidance and utilities for testing. That diversity is great, but developers often:
-- Re-implement the same test utilities and fixtures across projects.
-- Struggle to find a consistent way to do integration testing.
-- Spend time wiring test infrastructure (databases, migrations, HTTP clients, mock servers, containers) instead of focusing on business logic.
-
-Dev Easy Test brings a curated set of helpers, step definitions, and patterns that can be shared across projects, helping teams standardize testing without being locked into a single framework.
+Status: early-stage private alpha. AWS is the only provider, and only in emulator mode.
 
 
 ## Project structure (modules)
-This is a Maven multi-module project:
-- test-core: Core cloud capability APIs (provider‑agnostic), configuration (`TestCloudConfig`), and SPI (`CloudAdapter`).
-- test-feature: Provider‑neutral Cucumber glue + JUnit Platform suites (cloud selection, Storage, Queue). Runs features under `src/test/resources/features`.
-- test-cloud-aws: AWS adapter (SDK v2 + Testcontainers/LocalStack). Minimal capabilities working: S3 (`BlobStorage`) and SQS (`Queue`).
+
+| Module | Contents |
+| --- | --- |
+| `test-core` | Provider-agnostic capability interfaces, `TestCloudConfig`, the `CloudAdapter` SPI, and the JUnit 5 `@WithCloud` extension. No vendor SDKs. |
+| `test-cloud-aws` | AWS adapter: AWS SDK v2 plus Testcontainers/LocalStack. Implements BlobStorage (S3), Queue (SQS), PubSub (SNS+SQS) and NoSqlTable (DynamoDB). |
+| `test-feature` | Provider-neutral Cucumber glue and JUnit Platform suites. No main sources; everything lives under `src/test`. |
 
 Key directories:
-- `test-core/src/main/java/org/deveasy/test/core/cloud/**` — core Cloud API, config, capabilities
-- `test-feature/src/test/java/org/deveasy/test/feature/cloud/**` — Cucumber glue, suites, scenario state
-- `test-feature/src/test/resources/features/**` — provider‑neutral features (storage/queue)
-- `test-cloud-aws/src/main/java/org/deveasy/test/cloud/aws/**` — AWS adapter implementations and client wiring
-- `.github/workflows/*` — CI pipelines (build + quality-gates)
-
-## Architecture overview
-- Core (provider‑agnostic)
-  - Small capability interfaces: `BlobStorage`, `Queue` (more coming: `PubSub`, `NoSqlTable`, `SecretStore`, `KmsLike`).
-  - Unified runtime config via `TestCloudConfig` (provider, mode, region/project, overrides).
-  - SPI discovery with `ServiceLoader` for `CloudAdapter` implementations.
-- Feature layer (BDD)
-  - Provider‑neutral steps to select `provider/mode/region` and to operate Storage/Queue.
-  - JUnit Platform Cucumber engine runs features from `test-feature`.
-- Provider adapters (vendor SDKs isolated)
-  - `test-cloud-aws`: AWS SDK v2 + LocalStack/Testcontainers. Implements S3 + SQS minimal flows today.
-  - Future: `test-cloud-azure` (Azurite/Cosmos Emulator), `test-cloud-gcp` (official emulators).
-- CI & Quality
-  - Two workflows: `build.yml` (tests + coverage) and `quality-gates.yml` (lint, enforcer, errorprone-soft, OWASP).
-  - Emulator‑first strategy; live‑cloud runs will be opt‑in later.
-
-## Modules
-- test-core — core APIs and SPI, no vendor deps
-- test-feature — provider‑neutral Cucumber glue/suites
-- test-cloud-aws — AWS adapter (S3 + SQS minimal working; more services planned)
-
-## Project status (summary)
-- Baseline: Java 17; multi‑module Maven build is green locally and in GitHub Actions (Docker/Testcontainers required).
-- Capabilities: AWS S3 (`BlobStorage`) and SQS (`Queue`) minimal implementations are working and verified via JUnit ITs and provider‑neutral Cucumber glue.
-- CI: split into two workflows — `build.yml` (tests + coverage) and `quality-gates.yml` (lint, enforcer, errorprone-soft, OWASP). Artifacts uploaded: test reports and JaCoCo HTML; OWASP reports in quality gates.
-- Quality gates: Spotless + Checkstyle + Enforcer wired; coverage (JaCoCo) report‑only; OWASP enabled (report‑only). Error Prone soft profile/job queued.
-- Roadmap (next): v0.4 will add Pub/Sub + NoSQL (AWS SNS+DynamoDB; GCP Pub/Sub+Firestore) with emulator‑first approach; Azure baseline (Azurite/Cosmos Emulator) follows.
-
-## Supported/Targeted Technologies
-Planned and/or partially implemented support for:
-- Application frameworks: Spring, Spring Boot, Dropwizard, Guice
-- Data and migrations: MySQL (embedded), Flyway
-- HTTP testing: Apache HttpClient, WireMock
-- BDD: Cucumber (to be modernized to io.cucumber)
-- Cloud/platform helpers: AWS service stubs (S3, SQS, SNS, SES, Lambda, DynamoDB, Kinesis, ElastiCache)
+- `test-core/src/main/java/org/deveasy/test/core/cloud/` core API, config, capabilities
+- `test-feature/src/test/java/org/deveasy/test/feature/cloud/` Cucumber glue, suites, scenario state
+- `test-feature/src/test/resources/features/` provider-neutral feature files
+- `test-cloud-aws/src/main/java/org/deveasy/test/cloud/aws/` AWS adapter and client wiring
+- `docs/adr/` architecture decision records
 
 
-## Quick Start (Build and Test)
+## Architecture
+
+Capability interfaces live in `test-core`: `BlobStorage`, `Queue`, `PubSub`, `NoSqlTable`. Runtime configuration is a single immutable `TestCloudConfig` carrying provider, mode, region and overrides.
+
+Adapters are discovered with `java.util.ServiceLoader`. An adapter implements `org.deveasy.test.core.cloud.spi.CloudAdapter` and registers under `META-INF/services/`. Putting `test-cloud-aws` on the classpath is enough for the AWS adapter to be found. See [ADR 0001](docs/adr/0001-use-service-provider-interface.md).
+
+Emulators come first. The AWS adapter starts a LocalStack container through Testcontainers, so a test run needs Docker but no cloud credentials. See [ADR 0002](docs/adr/0002-emulator-first-testing.md).
+
+
+## Quick start
+
 Requirements:
-- Java 17 (LTS)
-- Maven 3.8+ (3.9+ recommended)
-- Docker running locally (for emulator-backed tests via Testcontainers)
+- Java 17
+- Maven 3.9+
+- Docker running, for the emulator-backed tests
 
-Build the whole project:
-
-```bash
-mvn -q -DskipTests clean install
-```
-
-Run the full test suite (includes emulator-backed integration tests):
+Build and run everything:
 
 ```bash
-mvn -q -DskipTests=false verify
+mvn -B verify
 ```
 
-Select a cloud provider and mode in Cucumber (example):
+That runs unit tests, the LocalStack integration tests, the Cucumber suites, and every quality gate. There are no skip flags to add.
+
+To run only the AWS module:
+
+```bash
+mvn -B -pl test-cloud-aws -am verify
+```
+
+Testcontainers pulls `localstack/localstack:3.8` on the first run, which is roughly 1.3 GB.
+
+Select a provider and mode from a feature file:
 
 ```gherkin
 Given cloud provider is "aws"
@@ -95,125 +68,59 @@ And cloud mode is "emulator"
 And cloud region is "eu-west-1"
 ```
 
-How provider adapters are discovered:
-- Adapters implement `org.deveasy.test.core.cloud.spi.CloudAdapter` and are discovered via Java `ServiceLoader`.
-- If `test-cloud-aws` is on the classpath, the AWS adapter will be picked up automatically.
 
-### Run the AWS S3 example (first working slice)
-- Ensure Docker is running
-- Then run only the AWS module tests (fast path):
+## What runs in a build
 
-```bash
-mvn -q -DskipTests=false -pl test-cloud-aws -am verify
-```
+| Suite | Where | Count |
+| --- | --- | --- |
+| Unit tests (Surefire) | test-core, test-feature | 8 |
+| Integration tests (Failsafe) | test-cloud-aws, against LocalStack | 6 |
+| Cucumber scenarios (Failsafe) | test-feature, against LocalStack | 7 |
 
-What you should see:
-- Testcontainers pulls and starts `localstack/localstack`
-- S3 integration test creates a unique bucket, uploads JSON, reads it back, and lists keys
-- Build ends with `BUILD SUCCESS`
-
-If Docker is not running or no adapter is present, steps will fail gracefully with a helpful message.
-
-### Run provider-neutral Cucumber examples (S3 + SQS)
-- Ensure Docker is running
-- Run the feature module tests (this executes Cucumber features under `test-feature/src/test/resources/features`):
-
-```bash
-mvn -q -DskipTests=false -pl test-feature -am test
-```
-
-What you should see:
-- LocalStack starts via Testcontainers
-- Storage feature: creates a bucket and stores/reads a JSON object
-- Queue feature: ensures a queue, sends a message and receives it within the timeout
-- Build ends with `BUILD SUCCESS`
+The `*IT` and `*Suite` classes are picked up by `maven-failsafe-plugin`, configured in the root POM. Surefire's default includes do not match either naming pattern.
 
 
-## Troubleshooting (Known Issues in Current Version)
-This repo uses older dependencies and group IDs that may no longer resolve from Maven Central, for example:
-- info.cukes (Cucumber 1.x) artifacts
-- com.wix:wix-embedded-mysql:1.0.1
-- com.spotify:docker-maven-plugin:1.0.0
-- Older Flyway and plugin versions
+## Quality gates
 
-Until the upgrade is completed, builds may fail to resolve some of the above. If you’re trying to experiment right now, you can:
-- Build with offline-friendly mirrors or your company’s artifact proxy if it contains the legacy artifacts.
-- Comment out failing dependencies temporarily while exploring code.
+These are the gates as the POM enforces them today.
 
-Better yet—help us modernize (see Roadmap and Contributing)!
+| Gate | Tool | Enforced at | Behaviour |
+| --- | --- | --- | --- |
+| Formatting | Spotless, google-java-format | `verify` | Fails on any deviation. `mvn spotless:apply` fixes it. |
+| Style | Checkstyle 3.6.0 | `verify` | Fails on violations. Rules are import hygiene only: unused, redundant and star imports. Main sources only. |
+| Build hygiene | Maven Enforcer | `validate` | Java 17 or above, and full dependency convergence. |
+| Coverage | JaCoCo | `verify` | Per-module floors, see below. |
+| Static analysis | Error Prone | `-Perrorprone` only | Findings at ERROR fail the build. Currently only WARN findings exist. |
+| Supply chain | OWASP Dependency-Check | `-Powasp` only | Not part of a plain `verify`; it needs an NVD API key. |
+
+### Coverage floors
+
+JaCoCo floors are set per module to the ratios each module actually reaches. They are a ratchet against regression, not a target that has been met.
+
+| Module | Line covered | Line floor | Branch covered | Branch floor |
+| --- | --- | --- | --- | --- |
+| test-core | 104/178, 0.58 | 0.58 | 14/46, 0.30 | 0.30 |
+| test-cloud-aws | 344/516, 0.66 | 0.66 | 81/228, 0.35 | 0.35 |
+| test-feature | no main sources | none | no main sources | none |
+
+The project target remains line 0.80 and branch 0.70. Neither module meets it. Raise the floors as tests are added; do not lower them.
 
 
-## Roadmap (Help Wanted)
-We want to bring this project up to date and make it welcoming for contributors. Proposed steps:
-1) Modernize build and dependencies
-   - Move from info.cukes to io.cucumber (Cucumber 7/8+)
-   - Move to JUnit 5 (JUnit Jupiter)
-   - Update Flyway, WireMock, HttpClient, Guava, Jackson to current stable versions
-   - Adopt Java 17 LTS as baseline (toolchains for Java 8 if necessary)
-   - Replace deprecated plugins (e.g., com.spotify:docker-maven-plugin) with maintained alternatives (e.g., jib, or testcontainers for integration testing)
-2) Improve developer experience
-   - Standard test fixtures (DB, migrations, mock servers)
-   - Consistent package naming and API polish
-   - Richer examples and documentation
-3) CI/CD
-   - Add GitHub Actions for build and test on pull requests
-   - Add code style and static analysis (Spotless/Checkstyle, ErrorProne, etc.)
-4) Releases
-   - Set up automated releases to Maven Central (via OSSRH) with signed artifacts
+## Continuous integration
 
-If you agree with this direction or want changes, please open a discussion or issue.
+GitHub Actions, two workflows, both triggered on pushes and pull requests against `main`.
+
+- `build.yml` runs `mvn -B verify` on an Ubuntu runner with Docker, then uploads the Surefire and Failsafe reports and the JaCoCo HTML.
+- `quality-gates.yml` runs Spotless and Checkstyle, then Enforcer, then Error Prone, then the OWASP audit.
+
+The OWASP job is skipped unless an `NVD_API_KEY` secret is present on the repository, because Dependency-Check cannot build its database without one. The job annotates the run when it skips.
 
 
 ## Contributing
-We welcome contributions! Here’s how to get started:
-1) Fork the repo and create a feature branch from main.
-2) If proposing large changes (e.g., moving to io.cucumber), please open a design issue first to align on the approach.
-3) Follow conventional commit messages where possible (e.g., feat:, fix:, docs:, chore:).
-4) Write tests for new functionality or behavior changes.
-5) Ensure `mvn -q -DskipTests clean install` and `mvn test` succeed locally.
-6) Open a Pull Request with a clear description and checklist of changes.
 
-We will add a CODE_OF_CONDUCT and CONTRIBUTING guide as part of the modernization. For now, please keep discussions respectful and constructive.
-
-
-## Using the Features (high-level)
-The `test-feature` module includes Cucumber step definitions and scenario state helpers for common tasks such as:
-- Starting/stopping application under test
-- Interacting with HTTP endpoints
-- Working with JSON Web Tokens
-- Managing databases and migrations
-- Mocking external services (e.g., via WireMock)
-- Interacting with AWS-like services (using local stubs or emulators)
-
-Once dependencies are modernized (io.cucumber + JUnit 5), we will publish concrete examples and ready-to-use templates in the repository.
+See [CONTRIBUTING.md](CONTRIBUTING.md). In short: branch, keep `mvn -B verify` green, use conventional commit messages, and sign off your commits.
 
 
 ## License
-Apache License 2.0. See LICENSE file for details.
 
-
-## Acknowledgements
-- Inspired by years of testing across diverse Java stacks
-- Thanks to the Cucumber, WireMock, Flyway, and wider Java OSS communities
-
-
----
-Last updated: 2025-11-05
-
-
-## CI (GitHub Actions)
-We use two workflows for faster feedback and clear separation:
-- build.yml
-  - tests: full test suite (includes LocalStack/Testcontainers integration tests)
-  - coverage: uploads JaCoCo HTML (module + aggregate) as artifacts
-- quality-gates.yml
-  - lint: Spotless + Checkstyle (no tests)
-  - static: Maven Enforcer (build hygiene)
-  - errorprone: soft/WARN profile (advisory; targeted ERROR checks enabled when the plugin is available)
-  - deps: OWASP Dependency-Check (report-only)
-
-Artifacts available on each run:
-- test-reports: surefire/failsafe reports
-- coverage-jacoco: HTML coverage under `**/target/site/jacoco/**` and `**/target/site/jacoco-aggregate/**`
-
-We follow trunk-based development: keep main green; prefer small, frequent commits.
+Apache License 2.0. See [LICENSE](LICENSE).

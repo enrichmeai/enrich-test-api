@@ -4,8 +4,5 @@
  */
 package org.deveasy.test.core.cloud;
 
-/**
- * Marker interface for a cloud testing capability (e.g., storage, queue, pub/sub, nosql).
- */
-public interface Capability {
-}
+/** Marker interface for a cloud testing capability (e.g., storage, queue, pub/sub, nosql). */
+public interface Capability {}
