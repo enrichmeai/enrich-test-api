@@ -1,69 +1,61 @@
-# Project Status and Roadmap
+# Project Status
 
-Last updated: 2025-11-08
+Last updated: 2026-09-06
 
 ## Snapshot
-- Baseline: Java 17; multi-module Maven build is green locally and in GitHub Actions (Docker/Testcontainers required).
-- Cloud SPI in place (`test-core`), provider adapter for AWS present (`test-cloud-aws`).
-- S3 capability implemented (`BlobStorage`) with a passing integration test via LocalStack.
-- SQS capability implemented (`Queue`) with a passing integration test via LocalStack.
-- CI standardized on GitHub Actions; legacy Travis/Coveralls removed.
 
-## Current Milestones
-- M1 — Docs & Examples: ✓ complete
-  - README quick start, examples scaffold, troubleshooting
-- M2 — AWS S3 minimal (BlobStorage): ✓ complete
-  - Ensure bucket, put/get, list, exists; IT against LocalStack
-- M3 — Coverage & Gates: * in progress
-  - JaCoCo (report-only), Spotless + .editorconfig, Checkstyle, Maven Enforcer
-- M4 — AWS SQS minimal (Queue): ✓ complete
-  - Ensure queue, send, receive-one (timeout), delete; JUnit tests
-- M5 — CI hardening: * in progress
-  - Split jobs (lint/static/tests/coverage/deps): ✓ done
-  - Artifacts: test reports + coverage HTML: * in progress
-  - Badges and dependency reports: planned
-- M6 — Private alpha packaging: planned
-  - 0.3.0-alpha1-private.1 to private registry; consumption notes
+- Java 17, Maven multi-module. `mvn -B verify` passes locally with Docker running and no skip flags.
+- Cloud SPI in `test-core`; one provider adapter, `test-cloud-aws`.
+- Four capabilities implemented against LocalStack: BlobStorage (S3), Queue (SQS), PubSub (SNS+SQS) and NoSqlTable (DynamoDB).
+- CI is GitHub Actions only. Both workflows trigger on `main`.
 
-Legend: ✓ done, * in progress
+## What runs in a build
 
-## Next Actions (Short Term)
-1) Keep CI split stable (two green runs) and upload coverage HTML per run
-2) Finalize provider-neutral Cucumber suites (S3 + SQS) under `test-feature` and document run steps
-3) Stabilize gates: Spotless/Checkstyle/Enforcer across all modules (two consecutive green runs)
-4) Add soft static & supply chain checks: Error Prone (WARN), OWASP (report-only)
-5) Prepare private alpha packaging and README private consumption notes
+| Suite | Runner | Count |
+| --- | --- | --- |
+| Unit tests | Surefire | 8 |
+| Integration tests against LocalStack | Failsafe | 6 |
+| Cucumber scenarios against LocalStack | Failsafe | 7 |
 
-## Vision
-Build a tiny, pragmatic Java testing library that:
-- Works out-of-the-box with emulator-first strategy via Testcontainers
-- Stays provider-agnostic at the core with pluggable adapters (AWS → Azure → GCP)
-- Offers a consistent developer experience across JUnit 5 and Cucumber
-- Keeps the core slim, with vendor SDKs isolated in provider modules
+Before September 2026 the integration tests and the Cucumber suite matched no configured plugin and had never executed. Wiring `maven-failsafe-plugin` exposed a genuine SQS failure against `localstack/localstack:2.3`, because AWS SDK v2 speaks the JSON protocol to SQS and that image does not serve it. The emulator image is now 3.8.
 
-## Roadmap (v0.3 → v0.6)
-- v0.3 (private alpha): AWS S3 + SQS minimal, CI split, coverage reports, basic gates
-- v0.4: Pub/Sub/DynamoDB basics, minimal JUnit 5 extension (`@WithCloud`)
-- v0.5: Azure adapter baseline (Azurite + docs for Service Bus/Cosmos constraints)
-- v0.6: GCP adapter baseline (official emulators), JSON matchers improvements
+## Quality gates, as configured
 
-## CI
-- GitHub Actions only (`.github/workflows/build.yml`), split into jobs: lint → static → tests → coverage (+ deps)
-- Requires Docker for emulator-backed tests
-- Artifacts: surefire/failsafe and coverage (JaCoCo HTML); dep-check to be added
+| Gate | Enforced at | Behaviour |
+| --- | --- | --- |
+| Spotless, google-java-format | `verify` | Fails on deviation |
+| Checkstyle 3.6.0 | `verify` | Fails on violation; import hygiene rules only, main sources |
+| Maven Enforcer | `validate` | Java 17+, dependency convergence |
+| JaCoCo | `verify` | Per-module floors at measured values |
+| Error Prone | `-Perrorprone` | ERROR findings fail; only WARN findings exist today |
+| OWASP Dependency-Check | `-Powasp` | Excluded from a plain `verify`; needs an NVD API key |
 
-## Quality Gates (target state)
-- Formatting: Spotless + .editorconfig (enforced)
-- Style: Checkstyle (pragmatic rules; fail on critical)
-- Build hygiene: Maven Enforcer (Java 17, convergence, duplicates, reproducible builds)
-- Static analysis: Error Prone (soft → harden later)
-- Coverage: JaCoCo (report-only → thresholds later)
-- Supply chain: OWASP Dependency-Check (report-only → fail on High/Critical later)
+## Coverage
 
-## How to Verify Locally
-- Prereqs: Java 17, Maven 3.8+, Docker running
-- Command: `mvn -q -DskipTests=false verify`
-- Expected: LocalStack container starts; S3 & SQS ITs pass; build is green
+| Module | Line | Branch |
+| --- | --- | --- |
+| test-core | 104/178, 0.58 | 14/46, 0.30 |
+| test-cloud-aws | 344/516, 0.66 | 81/228, 0.35 |
+| test-feature | no main sources | no main sources |
 
-## Contact
-Internal phase: trunk-based development with small, frequent commits to `main`. Open a PR if changing build/CI/gates; keep main green.
+Floors are set to these measured values. The target of line 0.80 and branch 0.70 is not met. The largest single gap is `CloudExtension` in test-core at 12 of 42 branches, and the error-handling paths of `AwsDynamoDB` at 43 of 130.
+
+## Known limitations
+
+- AWS is the only provider. There is no Azure or GCP adapter.
+- EMULATOR mode only. REAL mode is untested.
+- Docker is required for `mvn verify`; there is no Docker-free profile.
+- The OWASP audit does not run in CI until an `NVD_API_KEY` secret is added.
+
+## Architecture decisions
+
+See `docs/adr/`: SPI for adapters (0001), emulator-first testing (0002), capability interfaces (0003), Cucumber integration (0004), dependency modernization (0005).
+
+## Verifying locally
+
+```bash
+export JAVA_HOME="$HOME/.sdkman/candidates/java/17.0.10-tem"
+mvn -B verify
+```
+
+Docker must be running. The first run pulls the LocalStack image, roughly 1.3 GB.
