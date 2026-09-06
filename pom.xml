@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.deveasy</groupId>
-    <artifactId>dev-easy-test</artifactId>
+    <groupId>com.enrichmeai</groupId>
+    <artifactId>enrich-test-api</artifactId>
     <version>0.3.0-alpha1-private.1</version>
     <packaging>pom</packaging>
-    <name>dev-easy-test-api</name>
+    <name>enrich-test-api</name>
     <description>API for making the testing easy</description>
-    <url>https://github.com/enrichmeai/dev-easy-test-api</url>
+    <url>https://github.com/enrichmeai/enrich-test-api</url>
     <developers>
         <developer>
             <id>josepharuja</id>
@@ -49,9 +49,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:https://github.com/enrichmeai/dev-easy-test-api.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/enrichmeai/dev-easy-test-api.git</developerConnection>
-        <url>https://github.com/enrichmeai/dev-easy-test-api</url>
+        <connection>scm:git:https://github.com/enrichmeai/enrich-test-api.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/enrichmeai/enrich-test-api.git</developerConnection>
+        <url>https://github.com/enrichmeai/enrich-test-api</url>
         <tag>HEAD</tag>
     </scm>
     <modules>

@@ -1,19 +1,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.deveasy</groupId>
-        <artifactId>dev-easy-test</artifactId>
+        <groupId>com.enrichmeai</groupId>
+        <artifactId>enrich-test-api</artifactId>
         <version>0.3.0-alpha1-private.1</version>
     </parent>
     <artifactId>test-cloud-aws</artifactId>
-    <name>dev easy test cloud - aws</name>
-    <description>AWS cloud adapter for dev-easy-test (S3 minimal)</description>
+    <name>enrich test cloud - aws</name>
+    <description>AWS cloud adapter for enrich-test-api</description>
 
     <!-- Versions come from the parent's imported BOMs (ADR 0005). -->
     <dependencies>
         <!-- Core API dependency -->
         <dependency>
-            <groupId>org.deveasy</groupId>
+            <groupId>com.enrichmeai</groupId>
             <artifactId>test-core</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -1,4 +1,4 @@
-# Dev Easy Test API – Project Development Guidelines
+# enrich-test-api – Project Development Guidelines
 
 This document captures project-specific knowledge to speed up development, testing, and debugging of this repository. It assumes you are an experienced Java developer familiar with Maven, JUnit, and Testcontainers.
 
@@ -34,7 +34,7 @@ Typical workflows:
   This runs unit tests, ITs, Spotless check, Checkstyle, Enforcer, and produces JaCoCo reports.
 
 - Aggregate coverage HTML (mirrors CI coverage job):
-  mvn -DskipTests=true verify -pl :dev-easy-test -am
+  mvn -DskipTests=true verify -pl :enrich-test-api -am
   Output is under each module’s target/site/jacoco*.
 
 - Module-scoped build (useful when iterating on one area):
