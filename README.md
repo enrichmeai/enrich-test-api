@@ -147,11 +147,15 @@ BMAD Method 6.12.0 is installed in this repo. The planning artifacts live in `do
 | [implementation/](docs/specs/implementation/) | Expanded story files for the unblocked work, and `sprint-status.yaml` |
 
 Eight of the twenty-nine stories are expanded to file-and-line detail and can be picked up
-today. Seven are decisions only the maintainer can make, so they are deliberately left at
-epic grain rather than expanded into invented answers; `implementation-readiness.md` lists
-them. Three of those decisions — the package rename, the connection-accessor shape, and any
-Maven Central release — are cheap while the library is unpublished with one adapter and
-permanent afterwards.
+today. Three are genuine decisions only the maintainer can settle — the second provider, the
+`NVD_API_KEY` owner and audit policy, and the shape of the connection accessor — and are left
+at epic grain rather than expanded into invented answers.
+
+A further three read as decisions but are not, because the library is unpublished with no
+consumers: the package rename, removing `CloudMode.LIVE`, and removing `SECRETS` and `KMS`
+were only ever weighed against a breaking-change cost that does not exist yet. They are free
+work. Only the package rename has a deadline, since publishing makes it permanent.
+`implementation-readiness.md` has the full list.
 
 The specs describe the tree as it is, with gaps named as gaps. Architecture decision
 records remain in `docs/adr/`.
