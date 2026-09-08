@@ -3,7 +3,7 @@ title: enrich-test-api
 type: implementation-readiness
 status: current
 created: '2026-09-06'
-updated: '2026-09-06'
+updated: '2026-09-08'
 sources: ['docs/specs/PRD.md', 'docs/specs/architecture.md', 'docs/specs/epics.md']
 ---
 
@@ -14,9 +14,11 @@ that nothing records?**
 
 ## Verdict: CONCERNS
 
-Partly. Eight of the twenty-six stories can be built today from what is written down. Six cannot be
-built by anyone, at any skill level, because they are not implementation problems — they are choices
-only the maintainer can make. The remaining twelve sit downstream of those six.
+Partly. Eight of the twenty-nine stories are expanded and can be built today from what is written
+down, and one is already complete. Seven cannot be built by anyone, at any skill level, because they
+are not implementation problems — they are choices only the maintainer can make. Of the remaining
+thirteen, ten sit downstream of those choices and three (Epic 7) are unblocked work that has not yet
+been expanded to story files.
 
 This is not a defect in the planning. It is what the planning found. The useful response is to work
 the ready lane and answer the six questions in parallel, not to wait.
@@ -65,11 +67,31 @@ None of these can be delegated to an implementer. Each is one question.
    audited anything. **Blocks:** Story 5.2, which cannot be scoped until the first report exists.
 
 5. **Do `SECRETS` and `KMS` stay in `CloudServiceType`?** (Story 6.4, PRD Q4)
-   Declared with no interface behind them. Smallest of the six.
+   Declared with no interface behind them. Smallest of the seven, but it interacts with decision 6:
+   Option B there keys endpoints on `CloudServiceType`, so the enum's contents should settle first.
+
+6. **What shape does the connection accessor take — property map, typed accessors, or a capability?**
+   (Story 8.1)
+   New. The provider-neutral API exposes no endpoint and no credential, so a framework application
+   under test cannot be pointed at the emulator. Every option adds a member to `CloudAdapter`, a
+   fixed interface with exactly one implementer today. **Blocks:** Stories 8.2 and 8.3. Note this is
+   new capability rather than repair — agreeing the gap is real is not the same as signing off the
+   work.
 
 PRD Q6, on GitHub Pages, is **resolved** — see `docs/adr/0006-github-pages-disabled.md`.
 
-## What this pass changed in the plan
+### Three of these share a deadline
+
+Decisions 1 and 6, plus any decision to publish to Maven Central, are all cheap while the library is
+unpublished with a single adapter, and permanent afterwards. Maven Central artifacts cannot be
+changed or deleted, so the first publish converts a free package rename into a breaking change
+against real consumers' imports, and a free SPI addition into a breaking change for implementers.
+
+If a release is being considered, these are answered before it, not after. Decision 2 is not on that
+clock but is what would falsify either shape chosen in decision 6, since a second adapter is the
+first real test of whether the abstraction holds.
+
+## What the first pass changed in the plan
 
 **One story's premise was wrong and has been corrected.** Story 6.2 claimed the `.gitignore`
 patterns `src/main/resources/` and `src/test/resources/` were unanchored and therefore silently
@@ -97,12 +119,12 @@ recorded:
   behind a `// not tracking currently; placeholder for future` comment. Because the emulator
   container is shared for the whole JVM, resources survive between test classes.
 - Cleanup swallows `Throwable` silently, twice, so a failed teardown is invisible.
-- `AwsDynamoDB` caches table key schemas in a `static` map keyed by table name, and `deleteTable`
-  does not evict. A table dropped and recreated with a different key schema keeps the stale schema,
-  and `getItem` then returns `null` for an item that is present.
+- `ensureTable` returns without comparing an existing table's key schema to the one just requested,
+  so a second test class silently inherits the first's table. See the correction below — this bullet
+  originally blamed the wrong line.
 
-The third compounds the first: without cleanup, tables persist, and the cache makes that persistence
-incorrect rather than merely untidy.
+The third compounds the first: without cleanup, tables persist, and `ensureTable` then hands the
+next test class a table it did not ask for.
 
 **One acceptance criterion contradicted the code and was rewritten.** A draft of Story 1.2 required
 that `ResourceNotFoundException` and `DynamoDbException` each "surface a message naming the table".
@@ -110,6 +132,43 @@ They do not — the class swallows both and returns `null` or an empty list. A t
 draft would have failed and looked like a code bug. The criterion now describes the behaviour that
 exists, and the question of whether it is the right behaviour is raised separately rather than
 smuggled into a coverage story.
+
+## What the second pass changed
+
+**Story 7.3 blamed the wrong line, and has been retitled.** It was "Fix the stale key cache in
+`AwsDynamoDB`", on the reasoning that `deleteTable` fails to evict the static `KEYS` map so a
+recreated table reads through a stale schema. Reading `ensureTableInternal` again: on the
+table-exists path it calls `cacheKeysFromDescribe`, which re-reads the live schema and overwrites the
+cache. The cache self-corrects. A developer sent to that map would have found nothing wrong.
+
+The real defect is that `ensureTableInternal` calls `describeTable` and, if the table exists, returns
+**without comparing the existing key schema to the requested one** — the `pk` and `sk` arguments are
+discarded on that path. Combined with the cleanup gap, test class B asking for `orders` keyed on
+`orderId` silently receives class A's table keyed on `id`, and the failure lands later in `putItem`,
+which has no catch, as a raw SDK `ValidationException`. The test that breaks is not the test that
+caused it. Retitled to "Make `ensureTable` reject a table whose schema does not match"; the `KEYS`
+non-eviction survives as a minor sub-point, because it is still an unbounded static map.
+
+Retitling changed the generated tracking key, so `7-3-fix-the-stale-key-cache-in-awsdynamodb` appears
+as a dropped orphan in the sprint planner's report. Both keys were at `backlog`, so nothing needed
+carrying across.
+
+**Epic 8 is new: a framework application cannot reach the emulator.** The library drives cloud
+capabilities directly, which is what it was designed for. It cannot configure an application under
+test, and the reason is structural rather than a missing integration module: no endpoint and no
+credential is reachable from the provider-neutral API. `TestCloudConfig` exposes provider, mode,
+region and account; `CloudAdapter` exposes only `provider()`, `initialize()` and the four capability
+getters; the capabilities are pure operations. The single route to an endpoint is
+`org.deveasy.test.cloud.aws.internal.LocalStackHolder.get()`, which costs a consumer an `internal`
+package, a direct dependency on `test-cloud-aws`, and Testcontainers types — undoing AD-1 and FR-1.
+
+Nothing in the documentation said so. The README opened "A toolkit for testing Java applications
+against cloud services", which reads as the thing it does not do; that line is corrected, and the
+limitation is now in the PRD's Non-Users list, where it is the largest practical exclusion.
+
+Epic 8 is **new capability, not repair.** The original engagement put new capabilities out of scope.
+Specifying the gap does not change that: implementing it is a scope expansion for the maintainer to
+sign off separately.
 
 ## Standing guard on Epic 1
 
@@ -121,9 +180,9 @@ a floor below what the build achieves is permission to regress by the size of th
 
 ## Next
 
-- `docs/specs/implementation/sprint-status.yaml` tracks all 26 stories. Regenerate it after any
+- `docs/specs/implementation/sprint-status.yaml` tracks all 29 stories. Regenerate it after any
   epic title changes, since keys derive from titles.
 - Start with Story 1.1: it holds 30 of test-core's 32 uncovered branches, so nothing else in that
   module moves the floor.
-- Answer the five decisions above whenever convenient. Only decision 2 blocks a large amount of
-  work.
+- Decisions 1 and 6 are the ones with a deadline: free now, permanent after a first publish.
+  Decision 2 blocks the largest single body of work and is what would falsify decision 6.
