@@ -5,9 +5,11 @@
 ![Java](https://img.shields.io/badge/Java-17-blue)
 ![License](https://img.shields.io/badge/License-Apache_2.0-green)
 
-A toolkit for testing Java applications against cloud services, using local emulators rather than real cloud accounts.
+A toolkit for testing Java **cloud interactions** against local emulators rather than real cloud accounts.
 
 The core defines small, provider-neutral capability interfaces. Provider adapters implement them and keep the vendor SDKs to themselves. Tests written against the core do not name a cloud provider.
+
+**What it does and does not do.** A test asks for a `BlobStorage` or a `Queue` and drives it directly, so you can assert that your code puts the right bytes in the right bucket. It does **not** configure your application under test: nothing in the provider-neutral API exposes an endpoint or a credential, so you cannot point a Spring Boot, Quarkus or Micronaut context at the emulator this library starts. For that today you would use Testcontainers' LocalStack module directly. Closing the gap is [Epic 8](docs/specs/epics.md) and needs an SPI decision first.
 
 Status: early-stage private alpha. AWS is the only provider, and only in emulator mode.
 
@@ -138,14 +140,16 @@ BMAD Method 6.12.0 is installed in this repo. The planning artifacts live in `do
 | [product-brief.md](docs/specs/product-brief.md) | Problem, solution, users, scope |
 | [PRD.md](docs/specs/PRD.md) | Glossary, user journeys, FR-1 to FR-10, non-goals, open questions |
 | [architecture.md](docs/specs/architecture.md) | Ports-and-adapters spine, AD-1 to AD-9, stack, dependency-direction diagram |
-| [epics.md](docs/specs/epics.md) | Seven epics of work not yet done, including the coverage gap |
+| [epics.md](docs/specs/epics.md) | Eight epics of work not yet done, including the coverage gap and the framework-support gap |
 | [implementation-readiness.md](docs/specs/implementation-readiness.md) | Which stories can be built now, and the decisions that block the rest |
 | [implementation/](docs/specs/implementation/) | Expanded story files for the unblocked work, and `sprint-status.yaml` |
 
-Eight of the twenty-six stories are expanded to file-and-line detail and can be picked up
-today. Six are blocked on decisions only the maintainer can make — five questions, one of
-which gates two stories — so they are deliberately left at epic grain rather than expanded
-into invented answers. `implementation-readiness.md` lists them.
+Eight of the twenty-nine stories are expanded to file-and-line detail and can be picked up
+today. Seven are decisions only the maintainer can make, so they are deliberately left at
+epic grain rather than expanded into invented answers; `implementation-readiness.md` lists
+them. Three of those decisions — the package rename, the connection-accessor shape, and any
+Maven Central release — are cheap while the library is unpublished with one adapter and
+permanent afterwards.
 
 The specs describe the tree as it is, with gaps named as gaps. Architecture decision
 records remain in `docs/adr/`.

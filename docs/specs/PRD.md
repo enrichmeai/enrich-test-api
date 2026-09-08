@@ -3,7 +3,7 @@ title: enrich-test-api
 type: prd
 status: draft
 created: '2026-09-06'
-updated: '2026-09-06'
+updated: '2026-09-08'
 ---
 
 # PRD: enrich-test-api
@@ -35,6 +35,7 @@ It matters because the alternatives are a mock that tests itself, or a live acco
 - Teams that must test against a real cloud account. `CloudMode.LIVE` exists in the enum with no tested path behind it.
 - Teams that cannot run Docker in CI. There is no Docker-free profile.
 - Non-JVM teams. This is a Java 17 library with no wire protocol.
+- Teams wanting to integration-test a framework application against an emulator. The library drives cloud capabilities directly; it does not configure an application under test. No endpoint or credential is reachable from the provider-neutral API — `TestCloudConfig` exposes only provider, mode, region and account, and `CloudAdapter` only the capability getters — so a Spring Boot, Quarkus or Micronaut context cannot be pointed at the emulator without importing `org.deveasy.test.cloud.aws.internal.LocalStackHolder`, which costs the provider neutrality the library exists for. This is the largest practical exclusion on this list. Tracked as Epic 8.
 
 ### 2.3 Key User Journeys
 
