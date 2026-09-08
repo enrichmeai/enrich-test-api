@@ -84,7 +84,9 @@
   only route is `org.deveasy.test.cloud.aws.internal.LocalStackHolder`, which costs the
   provider neutrality the library exists for. Three candidate shapes for a connection
   accessor are set out; none is chosen. This is new capability, not repair, and remains a
-  scope expansion for the maintainer to sign off.
+  scope expansion for the maintainer to sign off. It is not release-blocking: `CloudAdapter`
+  is a plain interface on Java 17, so the accessor can arrive later as a `default` method
+  without breaking implementers.
 - Stories 1.5 and 1.6, because Epic 1's coverage arithmetic left no margin on either
   module. In `test-cloud-aws`, stories 1.2 and 1.3 expose 98 uncovered branches against a
   need of 79; in `test-core`, story 1.1 reaches 50 uncovered lines against a need of 39.

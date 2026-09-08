@@ -34,11 +34,12 @@ answer. `docs/specs/implementation-readiness.md` collects them in one place.
 Epics 3 and 8 are each entirely downstream of one decision, so their stories stay coarse
 until that decision lands. Epic 3 is the largest piece of work in the backlog.
 
-**Three of those decisions share a deadline.** The `org.deveasy.*` package rename (2.1), the
-connection-accessor shape (8.1) and any Maven Central release all cost little while the
-library is unpublished with a single adapter, and become permanent breaking changes the
-moment it is published. Whichever order they are answered in, they are answered before the
-first release, not after.
+**One of those decisions has a hard deadline.** The `org.deveasy.*` package rename (2.1) is
+free today and permanent the moment the library is published, because Maven Central artifacts
+cannot be changed or deleted and no later change rescues a consumer's `import` statements.
+The connection-accessor shape (8.1) is **not** on that clock — see Epic 8 — because
+`CloudAdapter` is a plain interface on Java 17 and the accessor can arrive later as a
+`default` method.
 
 ---
 
@@ -542,12 +543,23 @@ for the thing a framework integration would need.
 out of scope, and specifying it here does not change that: implementing Epic 8 is a scope expansion
 for the maintainer to sign off, separately from agreeing that the gap is real.
 
-**Cheap now, expensive later — and it shares a deadline with two other decisions.** Every option
-below adds a member to `CloudAdapter`, a fixed interface. That is a breaking change for
-implementers, and there is exactly one implementer today. The same asymmetry governs the
-`org.deveasy.*` package rename (PRD Q1) and any Maven Central release: all three are free while the
-library is unpublished with one adapter, and permanent afterwards. If a Central release is being
-considered, this decision belongs before it, not after.
+**Not on the release clock — an earlier draft of this epic said it was, and that was wrong.**
+That draft argued every option adds a member to `CloudAdapter`, a fixed interface, making it a
+breaking change for implementers and therefore a decision owed before any Maven Central release.
+
+`CloudAdapter` is a plain interface whose members are all abstract, and the project targets Java 17.
+A `default` method — `default Map<String, String> connectionProperties() { return Map.of(); }`, or
+one throwing `UnsupportedOperationException` — is both source- and binary-compatible. An existing
+adapter that does not override it still compiles and still links. So this can be added after a
+release without breaking anyone.
+
+That leaves exactly one thing on this project genuinely irreversible at publication: the
+`org.deveasy.*` package rename (Story 2.1), because a consumer's `import` statements cannot be
+rescued by a default method.
+
+Epic 8 is therefore a **product-completeness** decision, not a deadline one. Build it before launch
+if framework users are wanted at launch; defer it if not. The cost of deferring is that framework
+users bounce, not that the API is stuck.
 
 **Done when:** a Spring Boot or Quarkus test can start the emulator through this library and
 configure the application under test against it, without naming AWS, importing an `internal`

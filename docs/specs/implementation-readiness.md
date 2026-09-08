@@ -73,23 +73,27 @@ None of these can be delegated to an implementer. Each is one question.
 6. **What shape does the connection accessor take — property map, typed accessors, or a capability?**
    (Story 8.1)
    New. The provider-neutral API exposes no endpoint and no credential, so a framework application
-   under test cannot be pointed at the emulator. Every option adds a member to `CloudAdapter`, a
-   fixed interface with exactly one implementer today. **Blocks:** Stories 8.2 and 8.3. Note this is
-   new capability rather than repair — agreeing the gap is real is not the same as signing off the
-   work.
+   under test cannot be pointed at the emulator. **Blocks:** Stories 8.2 and 8.3. New capability
+   rather than repair — agreeing the gap is real is not the same as signing off the work.
+   **Not release-blocking:** `CloudAdapter` is a plain interface on Java 17, so any of these shapes
+   can arrive later as a `default` method without breaking implementers. An earlier draft claimed
+   otherwise; see the correction below.
 
 PRD Q6, on GitHub Pages, is **resolved** — see `docs/adr/0006-github-pages-disabled.md`.
 
-### Three of these share a deadline
+### Only one of these is irreversible at publication
 
-Decisions 1 and 6, plus any decision to publish to Maven Central, are all cheap while the library is
-unpublished with a single adapter, and permanent afterwards. Maven Central artifacts cannot be
-changed or deleted, so the first publish converts a free package rename into a breaking change
-against real consumers' imports, and a free SPI addition into a breaking change for implementers.
+**Decision 1, the package rename.** Maven Central artifacts cannot be changed or deleted, so the
+first publish pins every consumer's `import` statements to `org.deveasy.*`. Nothing rescues that
+afterwards. It is free today and permanent the moment the library is published.
 
-If a release is being considered, these are answered before it, not after. Decision 2 is not on that
-clock but is what would falsify either shape chosen in decision 6, since a second adapter is the
-first real test of whether the abstraction holds.
+**Decision 6 is not on that clock, contrary to an earlier draft of this document.** `CloudAdapter`
+is a plain interface whose members are all abstract, on Java 17, so a connection accessor can be
+added later as a `default` method — source- and binary-compatible, existing adapters unaffected.
+Deferring it costs framework users, not API flexibility.
+
+Decision 2 is not on the clock either, but is what would falsify whichever shape decision 6 picks: a
+second adapter is the first real test of whether the abstraction holds.
 
 ## What the first pass changed in the plan
 
@@ -170,6 +174,16 @@ Epic 8 is **new capability, not repair.** The original engagement put new capabi
 Specifying the gap does not change that: implementing it is a scope expansion for the maintainer to
 sign off separately.
 
+**And a correction inside this same pass.** The first draft of Epic 8 argued that every candidate
+shape adds a member to `CloudAdapter`, a fixed interface, and was therefore a breaking change owed
+before any Maven Central release. That was wrong, and it was wrong in the direction that manufactures
+urgency. `CloudAdapter` is a plain interface with all-abstract members, and the project targets Java
+17, so `default Map<String, String> connectionProperties() { return Map.of(); }` is source- and
+binary-compatible — an adapter that ignores it still compiles and still links.
+
+The practical consequence is that the release-blocker list is shorter than it looked. Only the
+package rename is irreversible at publication.
+
 ## Standing guard on Epic 1
 
 PRD counter-metric SM-C2 says coverage reached by tests that assert nothing is worse than a low
@@ -184,5 +198,5 @@ a floor below what the build achieves is permission to regress by the size of th
   epic title changes, since keys derive from titles.
 - Start with Story 1.1: it holds 30 of test-core's 32 uncovered branches, so nothing else in that
   module moves the floor.
-- Decisions 1 and 6 are the ones with a deadline: free now, permanent after a first publish.
+- Decision 1 is the only one with a hard deadline: free now, permanent after a first publish.
   Decision 2 blocks the largest single body of work and is what would falsify decision 6.
