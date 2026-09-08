@@ -155,6 +155,41 @@ The specs describe the tree as it is, with gaps named as gaps. Architecture deci
 records remain in `docs/adr/`.
 
 
+## Before a public release
+
+Nothing here is published to any registry, and this section is what would have to be true
+first. It is not a roadmap with dates; it is the list of things that are currently wrong or
+undecided, kept honest against the backlog in [epics.md](docs/specs/epics.md).
+
+**Defects that must be fixed.** The library misbehaves in exactly the case it is aimed at:
+several test classes in one run. The emulator container is shared for the whole JVM, the
+JUnit extension never releases topics or tables, and `ensureTable` returns without checking
+that an existing table's key schema matches the one requested — so a second test class can
+silently inherit the first's table, and the failure surfaces later in `putItem`, which has no
+catch, as a raw SDK `ValidationException`. The test that breaks is not the test that caused
+it. That is Epic 7, and it is the clearest blocker.
+
+**One decision that becomes permanent.** The Java packages are `org.deveasy.*` while the
+coordinates are `com.enrichmeai`. Renaming is free today and irreversible after publication,
+because no later change rescues a consumer's `import` statements. That is Story 2.1.
+
+**Housekeeping.** The version is `0.3.0-alpha1-private.1`, which cannot go to a public
+registry as it stands, and the POM still carries OSSRH publishing configuration pointing at a
+decommissioned host, which would have to go before any modern publishing setup arrives
+(Story 6.3).
+
+**Known and deliberately not blocking.** Coverage sits below its target, and `CloudExtension`
+— the injection path every user touches — is the thinnest part of it at 12 of 42 branches
+covered (Epic 1). `CloudMode.LIVE` is declared and branched on but untested and unguarded
+(Epic 4). One provider, emulator only, so the portability claim is a design intention rather
+than a demonstrated property (Epic 3). The framework-connection gap described above is Epic 8;
+it is not release-blocking, because `CloudAdapter` is a plain interface on Java 17 and an
+accessor can be added later as a `default` method without breaking implementers.
+
+The full readiness assessment, including the decisions that are open, is in
+[implementation-readiness.md](docs/specs/implementation-readiness.md).
+
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). In short: branch, keep `mvn -B verify` green, use conventional commit messages, and sign off your commits.
