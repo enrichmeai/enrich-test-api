@@ -130,6 +130,8 @@ GitHub Actions, two workflows, both triggered on pushes and pull requests agains
 
 The OWASP job is skipped unless an `NVD_API_KEY` secret is present on the repository, because Dependency-Check cannot build its database without one. The job annotates the run when it skips.
 
+Both workflows build on **JDK 21** while the artifact targets **release 17**. That is deliberate and the two numbers are not meant to match: the release target is a floor imposed on everyone who consumes the library, and nothing in this codebase uses a language or library feature later than 17, so raising it would narrow who can use the result and buy nothing. Building on a newer JDK reaches no consumer and proves the code runs on a newer runtime. See [ADR 0007](docs/adr/0007-build-on-a-newer-jdk-than-we-target.md).
+
 
 ## Specifications
 
