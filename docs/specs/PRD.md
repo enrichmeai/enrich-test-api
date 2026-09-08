@@ -10,7 +10,7 @@ updated: '2026-09-06'
 
 ## 0. Document Purpose
 
-This PRD is for the maintainer and any contributor picking up work on `com.enrichmeai:enrich-test-api`. It is written against the tree on the `chore/rebrand-and-bmad-specs` branch, at or after the coordinate rebrand in `f2b2c5e`, and every capability described below was executed in a green `mvn -B verify` run, not read off documentation. It is a developer-product PRD, so it carries the API-contract and dependency-policy clusters and drops the consumer-product ones. It builds on the five ADRs in `docs/adr/` rather than restating them; where an ADR already settles a decision it is referenced, not duplicated. The companion architecture spine is `docs/specs/architecture.md`.
+This PRD is for the maintainer and any contributor picking up work on `com.enrichmeai:enrich-test-api`. It is written against `main` at `3f31287`, which merged the coordinate rebrand, and every capability described below was executed in a green `mvn -B verify` run, not read off documentation. The branch this was first drafted on has since been merged and deleted; provenance now tracks `main`. It is a developer-product PRD, so it carries the API-contract and dependency-policy clusters and drops the consumer-product ones. It builds on the five ADRs in `docs/adr/` rather than restating them; where an ADR already settles a decision it is referenced, not duplicated. The companion architecture spine is `docs/specs/architecture.md`; the backlog derived from it is `docs/specs/epics.md`, and `docs/specs/implementation-readiness.md` records which of the open questions below block work.
 
 ## 1. Vision
 
@@ -258,7 +258,8 @@ A maintainer can run an OWASP Dependency-Check audit on demand, and a normal bui
 3. Does `CloudMode.LIVE` stay in the enum while unimplemented, or come out until it works? Today it is a promise the code does not keep.
 4. Should `SECRETS` and `KMS` remain in `CloudServiceType` with no interface behind them?
 5. Who owns the `NVD_API_KEY` secret, and is the supply-chain audit meant to gate merges or only report?
-6. Is GitHub Pages meant to serve this private alpha's README on the company apex domain?
+6. ~~Is GitHub Pages meant to serve this private alpha's README on the company apex domain?~~
+   **Resolved.** No. Pages is disabled for this repository; see `docs/adr/0006-github-pages-disabled.md`. It was also shadowing the authored product page at the same path on the apex domain, which is why this was not merely a presentation question.
 
 ## 9. Assumptions Index
 

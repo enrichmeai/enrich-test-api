@@ -138,7 +138,14 @@ BMAD Method 6.12.0 is installed in this repo. The planning artifacts live in `do
 | [product-brief.md](docs/specs/product-brief.md) | Problem, solution, users, scope |
 | [PRD.md](docs/specs/PRD.md) | Glossary, user journeys, FR-1 to FR-10, non-goals, open questions |
 | [architecture.md](docs/specs/architecture.md) | Ports-and-adapters spine, AD-1 to AD-9, stack, dependency-direction diagram |
-| [epics.md](docs/specs/epics.md) | Six epics of work not yet done, including the coverage gap |
+| [epics.md](docs/specs/epics.md) | Seven epics of work not yet done, including the coverage gap |
+| [implementation-readiness.md](docs/specs/implementation-readiness.md) | Which stories can be built now, and the decisions that block the rest |
+| [implementation/](docs/specs/implementation/) | Expanded story files for the unblocked work, and `sprint-status.yaml` |
+
+Eight of the twenty-six stories are expanded to file-and-line detail and can be picked up
+today. Six are blocked on decisions only the maintainer can make — five questions, one of
+which gates two stories — so they are deliberately left at epic grain rather than expanded
+into invented answers. `implementation-readiness.md` lists them.
 
 The specs describe the tree as it is, with gaps named as gaps. Architecture decision
 records remain in `docs/adr/`.
