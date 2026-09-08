@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
           cache: 'maven'
       - name: Spotless check
         run: mvn -B -DskipTests=true spotless:check
@@ -37,7 +37,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
           cache: 'maven'
       - name: Enforcer validate
         run: mvn -B -DskipTests=true validate
@@ -51,7 +51,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
           cache: 'maven'
       # Compiles main and test sources with Error Prone on javac's processor
       # path. Findings at ERROR severity fail the build; WARN findings do not.
@@ -69,7 +69,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
           cache: 'maven'
       # dependency-check cannot populate its database without an NVD API key, so
       # this step is skipped until the NVD_API_KEY secret exists on the repo.
