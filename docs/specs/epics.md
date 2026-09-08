@@ -3,7 +3,7 @@ title: enrich-test-api
 type: epics-and-stories
 status: draft
 created: '2026-09-06'
-updated: '2026-09-06'
+updated: '2026-09-08'
 sources: ['docs/specs/PRD.md', 'docs/specs/architecture.md', 'docs/adr/0006-github-pages-disabled.md']
 ---
 
@@ -24,15 +24,21 @@ Two kinds of item are mixed together, and they are not interchangeable.
 expanded story file under `docs/specs/implementation/` carrying file paths, method names
 and concrete acceptance criteria.
 
-**Decisions** are not work. Stories 2.1, 3.1, 4.1, 5.1, 5.3 and 6.4 each ask the maintainer
-to choose something no amount of implementation can settle: a breaking package rename, a
-second cloud provider, whether an unimplemented enum value stays, who owns a repository
-secret. They are left at epic grain deliberately. Expanding them into implementation
-detail before the choice is made would be inventing the answer. `docs/specs/implementation-readiness.md`
-collects them in one place.
+**Decisions** are not work. Stories 2.1, 3.1, 4.1, 5.1, 5.3, 6.4 and 8.1 each ask the
+maintainer to choose something no amount of implementation can settle: a breaking package
+rename, a second cloud provider, whether an unimplemented enum value stays, who owns a
+repository secret, the shape of a new SPI member. They are left at epic grain deliberately.
+Expanding them into implementation detail before the choice is made would be inventing the
+answer. `docs/specs/implementation-readiness.md` collects them in one place.
 
-Epic 3 is the largest piece of work in the backlog and is entirely downstream of one
-decision, so its stories stay coarse until that decision lands.
+Epics 3 and 8 are each entirely downstream of one decision, so their stories stay coarse
+until that decision lands. Epic 3 is the largest piece of work in the backlog.
+
+**Three of those decisions share a deadline.** The `org.deveasy.*` package rename (2.1), the
+connection-accessor shape (8.1) and any Maven Central release all cost little while the
+library is unpublished with a single adapter, and become permanent breaking changes the
+moment it is published. Whichever order they are answered in, they are answered before the
+first release, not after.
 
 ---
 
@@ -457,20 +463,145 @@ prevent the remaining resources from being released; the test run's own result i
 teardown failure. Whether teardown failure should fail the build is called out for decision rather
 than assumed.
 
-### Story 7.3: Fix the stale key cache in AwsDynamoDB
+### Story 7.3: Make ensureTable reject a table whose schema does not match
 
-As a test author, recreating a table with a different key schema does not silently use the old one.
+As a test author, asking for a table with a partition key I named either gets me that table or
+fails loudly — it never silently hands me someone else's.
 
-Context: found alongside Story 7.1. `AwsDynamoDB` keeps a `private static final Map<String, TableKeys> KEYS`
-keyed by table name only. It is static, so it is shared by every instance in the JVM, and nothing
-evicts from it. `deleteTable` does not clear it. Because the emulator container is also shared for the
-whole JVM, a table dropped and recreated with a different partition or sort key keeps the first
-schema's cached keys, and `getItem` then builds a request against the wrong attribute names. The
-symptom is a lookup that returns `null` for an item that is present.
+**This story previously blamed the wrong line, and the correction is the point of it.** An earlier
+draft was titled "Fix the stale key cache in AwsDynamoDB" and claimed that `deleteTable` failing to
+evict the static `KEYS` map meant a recreated table kept the first schema's cached keys. Reading
+`ensureTableInternal` again, that is not what happens: on the table-exists path it calls
+`cacheKeysFromDescribe`, which re-reads the live schema and overwrites the cache. The cache
+self-corrects. A developer sent to fix `KEYS` would have found nothing wrong and the real defect
+would have survived.
 
-This compounds Story 7.1: without cleanup, tables persist; with a stale cache, the persistence is
-also incorrect.
+**The real defect.** `ensureTableInternal` calls `describeTable`, and if the table exists it caches
+the keys and returns — **without comparing the existing schema to the one just requested**. The
+requested `pk` and `sk` arguments are discarded on that path. So:
 
-Acceptance: `deleteTable` evicts the table's entry; a test creates a table with one partition key,
-deletes it, recreates it with a different partition key, and reads back an item it wrote. Whether
-the cache should be per-instance rather than static is raised as a question, not decided here.
+1. Test class A calls `ensureTable("orders", "id")`. The table is created with partition key `id`.
+2. Class A ends. Nothing cleans the table up, because Story 7.1's tracking gap means tables are
+   never released, and the emulator container is shared for the whole JVM.
+3. Test class B calls `ensureTable("orders", "orderId")`. `describeTable` succeeds, so the method
+   returns having done nothing. B believes it has a table keyed on `orderId`; it has A's table
+   keyed on `id`.
+4. `putItem` then fails. It has **no catch block**, so the failure surfaces as a raw SDK
+   `ValidationException` about a missing key attribute.
+
+The test that breaks is not the test that caused it, and the message names neither. This is the
+sharpest edge in the library for the multi-test-class case, which is the PRD's UJ-2 — the
+standardisation journey the product is aimed at.
+
+Depends on Story 7.1 in the sense that cleanup removes the common trigger, but it does not depend on
+it for correctness: two classes running in either order with mismatched schemas is a defect whether
+or not cleanup exists.
+
+Acceptance: `ensureTable` compares the existing table's key schema to the requested partition and
+sort key, and on a mismatch fails with a message naming the table, the schema it found and the
+schema it was asked for. A test creates a table one way, calls `ensureTable` with a different
+partition key, and asserts that failure — not a `ValidationException` from a later `putItem`.
+Whether a mismatch should instead recreate the table is raised as a question, not decided here:
+silently dropping a table is its own footgun.
+
+Minor, and kept from the earlier draft because it is still true: `KEYS` is a `private static final
+Map` that nothing ever evicts. It grows for the life of the JVM, and after a `deleteTable` a
+`getItem` issued without an intervening `ensureTable` reads a stale key name against a table that
+is gone — which returns `null`, indistinguishable from a missing item. Worth clearing in
+`deleteTable` while in the file.
+
+---
+
+## Epic 8: Let a framework application reach the emulator
+
+**Why:** the library can test your cloud calls. It cannot help you integration-test your
+application. Nothing in the provider-neutral API exposes an endpoint or a credential, so a Spring
+Boot, Quarkus or Micronaut service under test cannot be pointed at the emulator the library
+started.
+
+Verified against the code rather than assumed:
+
+- `TestCloudConfig` exposes `provider()`, `mode()`, `regionOrLocation()`, `projectOrAccount()`.
+  Nothing else.
+- `CloudAdapter` exposes `provider()`, `initialize(TestCloudConfig)` and the four capability
+  getters. Nothing else.
+- The capability interfaces are pure operations.
+- No `springframework`, `quarkus`, `micronaut`, `jakarta` or `javax.inject` reference exists
+  anywhere in the sources or POMs.
+
+The only route to an endpoint is `org.deveasy.test.cloud.aws.internal.LocalStackHolder.get()`,
+which returns a Testcontainers `LocalStackContainer`. Reaching it costs a consumer three things at
+once: a dependency on a package named `internal` with no stability promise, a direct dependency on
+`test-cloud-aws` rather than the core, and Testcontainers types in their test code. The third
+undoes AD-1 and FR-1 — the provider neutrality that is the product's central claim.
+
+So the gap is not a missing integration module. It is that the provider-neutral API has no shape
+for the thing a framework integration would need.
+
+**Scope note.** This is **new capability**, not repair. The original engagement put new capabilities
+out of scope, and specifying it here does not change that: implementing Epic 8 is a scope expansion
+for the maintainer to sign off, separately from agreeing that the gap is real.
+
+**Cheap now, expensive later — and it shares a deadline with two other decisions.** Every option
+below adds a member to `CloudAdapter`, a fixed interface. That is a breaking change for
+implementers, and there is exactly one implementer today. The same asymmetry governs the
+`org.deveasy.*` package rename (PRD Q1) and any Maven Central release: all three are free while the
+library is unpublished with one adapter, and permanent afterwards. If a Central release is being
+considered, this decision belongs before it, not after.
+
+**Done when:** a Spring Boot or Quarkus test can start the emulator through this library and
+configure the application under test against it, without naming AWS, importing an `internal`
+package, or depending on Testcontainers directly.
+
+### Story 8.1: Choose the shape of the connection accessor
+
+**Decision required. Blocked on the maintainer.**
+
+Three options, none obviously best.
+
+**Option A — a flat property map.** `Map<String, String> connectionProperties()` on `CloudAdapter`.
+Framework-agnostic, trivially consumed by a Spring `@DynamicPropertySource` or a Quarkus
+`QuarkusTestResourceLifecycleManager`, and adds no new types. The cost is that the keys become an
+unversioned contract in string form, and provider-neutral keys have to be invented and then honoured
+by every future adapter.
+
+**Option B — typed accessors.** `URI endpointFor(CloudServiceType)` plus a credentials accessor.
+Type-safe, uses the `CloudServiceType` enum that already exists, and makes the per-service shape
+explicit. The cost is that credentials need a type of their own, and the abstraction has to survive
+providers whose auth is not a key pair — which is most of them outside AWS, and is exactly what a
+second adapter would test.
+
+**Option C — a `ConnectionDetails` capability.** Model it as another `Capability`, consistent with
+the existing pattern, injectable through `@WithCloud` like the others. The most idiomatic fit for
+the current design, but it still requires a getter on `CloudAdapter`, so it does not avoid the
+breaking change — and a "capability" that describes the connection rather than performing operations
+sits oddly beside `BlobStorage` and `Queue`.
+
+Acceptance: an ADR records the choice and why, explicitly weighing the string-contract cost of A
+against the auth-model risk of B, and notes that Epic 3's second adapter is what would falsify
+either. It also records whether `SECRETS` and `KMS` (Story 6.4) should exist before the
+`CloudServiceType`-keyed shape of Option B is committed to.
+
+### Story 8.2: Implement the accessor for the AWS adapter
+
+**Blocked on Story 8.1.**
+
+Acceptance: the chosen accessor is implemented in `AwsCloudAdapter` and returns values sourced from
+the running LocalStack container; `LocalStackHolder` stops being the only route to an endpoint; no
+consumer needs to import anything under `internal`.
+
+### Story 8.3: Prove it with a framework test
+
+**Blocked on Story 8.2.**
+
+As a Spring Boot author, I can start my application in a test with its cloud client pointed at the
+emulator, call my own endpoint, and assert on the resulting bucket or table.
+
+Acceptance: a worked example exists — in `examples/`, not as a dependency of any published module —
+in which an application context is configured entirely from the provider-neutral accessor. The
+example's test code names no vendor SDK type and imports nothing from `test-cloud-aws`. If that
+proves impossible, the reason is the finding and needs an ADR.
+
+Note the example must not pull a framework into the library's own reactor. Whether `examples/`
+builds in CI is a separate call: it is the only thing that would stop the example rotting, and it
+is also the only thing that would put Spring on the build.
