@@ -53,6 +53,17 @@
   swallows them and returns `null` or an empty list. The criteria now match the code.
 - The PRD's provenance pointed at a branch that has since been merged and deleted; it now
   tracks `main` at `3f31287`. PRD open question 6 is marked resolved, pointing at ADR 0006.
+- The backlog over-weighted backwards compatibility for a library that is unpublished and has
+  no consumers. Three items written up as decisions — the package rename, removing
+  `CloudMode.LIVE`, removing `SECRETS` and `KMS` — were decisions only because changing them
+  would break someone. Nobody exists to break, so they are free work, and the genuine decision
+  list drops from seven to three. Only the package rename has a hard deadline, because
+  publishing makes it permanent.
+- Epic 8 is re-judged on the right axis. It had been downgraded to "can safely wait" because an
+  accessor can be added later without breaking implementers. True, and beside the point: with no
+  users the question is what makes a first install worth doing, not what breaks existing ones.
+  Most Java engineers testing cloud-backed services are on Spring Boot, and today they cannot
+  use the library for that, which may make it a launch feature.
 - Story 7.3 blamed the wrong line and is retitled. It claimed `AwsDynamoDB`'s static `KEYS`
   map went stale because `deleteTable` does not evict it. It does not: `ensureTableInternal`
   calls `cacheKeysFromDescribe` on the table-exists path, which re-reads the live schema. The

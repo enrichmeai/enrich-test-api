@@ -24,22 +24,30 @@ Two kinds of item are mixed together, and they are not interchangeable.
 expanded story file under `docs/specs/implementation/` carrying file paths, method names
 and concrete acceptance criteria.
 
-**Decisions** are not work. Stories 2.1, 3.1, 4.1, 5.1, 5.3, 6.4 and 8.1 each ask the
-maintainer to choose something no amount of implementation can settle: a breaking package
-rename, a second cloud provider, whether an unimplemented enum value stays, who owns a
-repository secret, the shape of a new SPI member. They are left at epic grain deliberately.
-Expanding them into implementation detail before the choice is made would be inventing the
-answer. `docs/specs/implementation-readiness.md` collects them in one place.
+**Decisions** are not work — but fewer of these are decisions than first appeared. The
+library is unpublished and has no consumers, and three stories were written up as decisions
+only because changing them would be a breaking change. There is nobody to break, so the
+deliberation is over before it starts:
 
-Epics 3 and 8 are each entirely downstream of one decision, so their stories stay coarse
-until that decision lands. Epic 3 is the largest piece of work in the backlog.
+- **Story 2.1**, the package rename. Free today; 20 main sources, 12 test sources, two
+  `META-INF/services` filenames.
+- **Story 4.1**, `CloudMode.LIVE`. Removing an enum value breaks nobody. Take it out until it
+  works.
+- **Story 6.4**, `SECRETS` and `KMS`. Same, smaller.
 
-**One of those decisions has a hard deadline.** The `org.deveasy.*` package rename (2.1) is
-free today and permanent the moment the library is published, because Maven Central artifacts
-cannot be changed or deleted and no later change rescues a consumer's `import` statements.
-The connection-accessor shape (8.1) is **not** on that clock — see Epic 8 — because
-`CloudAdapter` is a plain interface on Java 17 and the accessor can arrive later as a
-`default` method.
+What remains are three genuine decisions: **3.1** the second provider, **5.1 / 5.3** the
+`NVD_API_KEY` owner and whether the audit gates merges, and **8.1** the shape of the
+connection accessor. Those stay at epic grain deliberately; expanding them before the choice
+is made would be inventing the answer. `docs/specs/implementation-readiness.md` collects the
+whole list.
+
+Epics 3 and 8 are each downstream of one of those, so their stories stay coarse. Epic 3 is
+the largest piece of work in the backlog.
+
+**Exactly one item has a hard deadline.** The package rename is free today and permanent the
+moment the library is published, because Maven Central artifacts cannot be changed or deleted
+and no later change rescues a consumer's `import` statements. Do it before any release.
+Everything else can move afterwards at a cost.
 
 ---
 
@@ -199,8 +207,12 @@ Expanded: `docs/specs/implementation/1-6-cover-the-remaining-test-core-classes.m
 `org.deveasy.*`. Every consumer sees the mismatch in their import statements. This is PRD open
 question 1.
 
-**Done when:** either the packages match the groupId, or a written decision records why they
-stay.
+**Not really a decision any more.** It was written up as one because renaming is breaking across
+every source file. The library is unpublished with no consumers, so it breaks nobody, and the cost
+is an afternoon. The only thing that makes this urgent is that publishing makes it permanent.
+
+**Done when:** the packages match the groupId — or, if they are deliberately kept, a written record
+says why, which after a release becomes the only available answer.
 
 ### Story 2.1: Decide whether the packages move
 
@@ -283,6 +295,10 @@ Acceptance: the suite runs the same features against each adapter present on the
 
 **Why:** the enum offers a mode the code does not implement end to end. That is a promise the
 library does not keep, and it is PRD open question 3.
+
+**Not really a decision any more, on the removal side.** Removing an enum value is breaking only if
+someone depends on it, and nobody does. Taking `LIVE` out until it works is free today and it can
+come back when the stories below are real.
 
 **Done when:** `LIVE` either works with a documented credential story, or is gone.
 
@@ -543,23 +559,25 @@ for the thing a framework integration would need.
 out of scope, and specifying it here does not change that: implementing Epic 8 is a scope expansion
 for the maintainer to sign off, separately from agreeing that the gap is real.
 
-**Not on the release clock — an earlier draft of this epic said it was, and that was wrong.**
-That draft argued every option adds a member to `CloudAdapter`, a fixed interface, making it a
-breaking change for implementers and therefore a decision owed before any Maven Central release.
+**Judge this on whether a first user can do what they came for, not on compatibility.**
 
-`CloudAdapter` is a plain interface whose members are all abstract, and the project targets Java 17.
-A `default` method — `default Map<String, String> connectionProperties() { return Map.of(); }`, or
-one throwing `UnsupportedOperationException` — is both source- and binary-compatible. An existing
-adapter that does not override it still compiles and still links. So this can be added after a
-release without breaking anyone.
+An earlier draft of this epic argued it was release-blocking because every candidate shape adds a
+member to `CloudAdapter`, a fixed interface, and so breaks implementers. That was wrong twice over.
+`CloudAdapter` is a plain interface with all-abstract members on Java 17, so a `default` method is
+source- and binary-compatible — and in any case the library is unpublished with one implementer,
+which is your own, so there is nobody to break.
 
-That leaves exactly one thing on this project genuinely irreversible at publication: the
-`org.deveasy.*` package rename (Story 2.1), because a consumer's `import` statements cannot be
-rescued by a default method.
+Compatibility is simply the wrong axis. With no users, the question is not what breaks existing
+consumers; it is **what makes a stranger's first install worth doing.**
 
-Epic 8 is therefore a **product-completeness** decision, not a deadline one. Build it before launch
-if framework users are wanted at launch; defer it if not. The cost of deferring is that framework
-users bounce, not that the API is stuck.
+On that axis this looks like a launch feature rather than a deferral. The PRD's primary user is a
+Java backend engineer testing a service that talks to S3, SQS, SNS or DynamoDB, and that engineer is
+very probably on Spring Boot. Today they install the library, discover they cannot point their
+application context at the emulator, and go back to Testcontainers. Shipping without this means
+shipping something a large part of the target audience cannot use for the thing they came for.
+
+That is a product judgement rather than an API one, and it belongs to the maintainer. What this epic
+asserts is only that the gap is real and the axis matters.
 
 **Done when:** a Spring Boot or Quarkus test can start the emulator through this library and
 configure the application under test against it, without naming AWS, importing an `internal`

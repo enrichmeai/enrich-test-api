@@ -14,11 +14,17 @@ that nothing records?**
 
 ## Verdict: CONCERNS
 
-Partly. Eight of the twenty-nine stories are expanded and can be built today from what is written
-down, and one is already complete. Seven cannot be built by anyone, at any skill level, because they
-are not implementation problems — they are choices only the maintainer can make. Of the remaining
-thirteen, ten sit downstream of those choices and three (Epic 7) are unblocked work that has not yet
-been expanded to story files.
+Partly. Eight of the twenty-nine stories are expanded and can be built today, and one is already
+complete.
+
+The blocking list is shorter than it first looked. The library is unpublished with no consumers, so
+three items previously written up as decisions — the package rename, removing `CloudMode.LIVE`,
+removing `SECRETS` and `KMS` — are not decisions at all. Each was a decision only because changing
+it would break someone, and there is nobody to break. They are free work.
+
+That leaves **three genuine decisions** nobody but the maintainer can settle, and only one item on
+the whole list with a hard deadline. Epic 7's three stories are unblocked work not yet expanded to
+story files; the rest sit downstream of the three decisions.
 
 This is not a defect in the planning. It is what the planning found. The useful response is to work
 the ready lane and answer the six questions in parallel, not to wait.
@@ -41,59 +47,89 @@ numbers, method names and acceptance criteria written against code that was read
 
 ## Decisions required — the blocking list
 
-None of these can be delegated to an implementer. Each is one question.
+**Read this first: the library is unpublished and has no consumers.** That is not a detail, it is
+what sorts this list. Three of the items below were written as decisions because changing them
+would be a breaking change. There is nobody to break. For those, the deliberation is over before it
+starts and only the work remains.
 
-1. **Do the Java packages move to `com.enrichmeai.*`?** (Story 2.1, PRD Q1)
-   Breaking across 20 main and 12 test sources, plus two `META-INF/services` files whose *names*
-   encode the interface FQN. Cheap now at `0.3.0-alpha1-private.1` with no published consumers;
-   expensive later. **Blocks:** Story 2.2.
+### Not decisions — free work, do it before publishing
 
-2. **Azure or GCP for the second adapter?** (Story 3.1, PRD Q2)
-   The product's central claim — that a test written against the core runs on any provider — is
-   unproven with one adapter. The architecture spine names this the single largest architectural
-   risk. Emulator coverage constrains the answer: Azurite covers blob and queue but neither Service
-   Bus nor Cosmos. **Blocks:** the whole of Epic 3, the largest piece of work in the backlog.
+**A. Move the Java packages to `com.enrichmeai.*`.** (Story 2.1, PRD Q1)
+Written up as a decision on the grounds that renaming is breaking across every source file. With no
+consumers it breaks nothing: 20 main sources, 12 test sources, and two `META-INF/services` files
+whose *names* encode the interface FQN. The coordinates are already `com.enrichmeai`, so the only
+question was ever whether the cost was worth the consistency, and today the cost is an afternoon.
 
-3. **Does `CloudMode.LIVE` stay?** (Story 4.1, PRD Q3)
-   `AwsClients` does branch on it and build clients from the default credential chain, so it is not
-   absent — it is untested, undocumented and unguarded. Keeping it means a credential story, a
-   destructive-operation guard and a profile. Removing it is a breaking enum change. **Blocks:**
-   Stories 4.2–4.4. Interacts with Epic 7: without resource cleanup, `LIVE` would leak real
-   resources.
+This is the one item on the whole list with a hard deadline. Maven Central artifacts cannot be
+changed or deleted, so the first publish pins every future consumer's `import` statements to
+`org.deveasy.*` permanently. Free now, irreversible later. **Do it before any release.**
 
-4. **Who provisions `NVD_API_KEY`, and does the audit gate merges or only report?** (Stories 5.1
-   and 5.3, PRD Q5)
-   Only the repository owner can create the secret. The gate is wired, guarded, and has never
-   audited anything. **Blocks:** Story 5.2, which cannot be scoped until the first report exists.
+**B. Take `CloudMode.LIVE` out until it works.** (Story 4.1, PRD Q3)
+Written up as a decision because removing an enum value is breaking. It breaks nobody. `AwsClients`
+does branch on `LIVE` and build clients from the default credential chain, so the mode is not
+absent — it is untested, undocumented, and unguarded against destructive operations on a real
+account. Shipping an enum value that does not work is a promise the code does not keep. Removing it
+costs nothing today and it can come back when Stories 4.2–4.4 are real.
 
-5. **Do `SECRETS` and `KMS` stay in `CloudServiceType`?** (Story 6.4, PRD Q4)
-   Declared with no interface behind them. Smallest of the seven, but it interacts with decision 6:
-   Option B there keys endpoints on `CloudServiceType`, so the enum's contents should settle first.
+**C. Take `SECRETS` and `KMS` out of `CloudServiceType`.** (Story 6.4, PRD Q4)
+Same reasoning, smaller. Declared with no interface behind them, and free to remove. Note it
+interacts with F below: one candidate shape there keys endpoints on `CloudServiceType`, so settling
+the enum first is the cheaper order.
 
-6. **What shape does the connection accessor take — property map, typed accessors, or a capability?**
-   (Story 8.1)
-   New. The provider-neutral API exposes no endpoint and no credential, so a framework application
-   under test cannot be pointed at the emulator. **Blocks:** Stories 8.2 and 8.3. New capability
-   rather than repair — agreeing the gap is real is not the same as signing off the work.
-   **Not release-blocking:** `CloudAdapter` is a plain interface on Java 17, so any of these shapes
-   can arrive later as a `default` method without breaking implementers. An earlier draft claimed
-   otherwise; see the correction below.
+### Genuine decisions — nobody but the maintainer can settle these
+
+**D. Azure or GCP for the second adapter?** (Story 3.1, PRD Q2)
+The product's central claim — that a test written against the core runs on any provider — is
+unproven with one adapter, and the architecture spine names this the single largest architectural
+risk. Emulator coverage constrains the answer: Azurite covers blob and queue but neither Service Bus
+nor Cosmos, so a first Azure adapter could not implement PubSub or NoSqlTable against a supported
+emulator. **Blocks:** all of Epic 3, the largest body of work in the backlog. This is a genuine
+product-direction call with real cost either way.
+
+**E. Who provisions `NVD_API_KEY`, and does the audit gate merges or only report?** (Stories 5.1,
+5.3, PRD Q5)
+Only the repository owner can create the secret, so this is blocked on you in the most literal
+sense. The gate is wired, guarded, and has never audited anything. **Blocks:** Story 5.2, which
+cannot be scoped until a first report exists.
+
+**F. What shape does the connection accessor take?** (Story 8.1)
+A flat property map, typed accessors keyed on `CloudServiceType`, or a `ConnectionDetails`
+capability. **Blocks:** Stories 8.2 and 8.3. New capability rather than repair, so implementing it
+is a scope expansion to sign off separately from agreeing the gap is real.
+
+Not release-blocking on compatibility grounds — `CloudAdapter` is a plain interface on Java 17, so
+any shape can arrive later as a `default` method, and with no implementers but your own even that
+courtesy is optional. But see the next section: compatibility is the wrong axis to judge this on.
 
 PRD Q6, on GitHub Pages, is **resolved** — see `docs/adr/0006-github-pages-disabled.md`.
 
-### Only one of these is irreversible at publication
+### What "no consumers" changes about Epic 8
 
-**Decision 1, the package rename.** Maven Central artifacts cannot be changed or deleted, so the
-first publish pins every consumer's `import` statements to `org.deveasy.*`. Nothing rescues that
-afterwards. It is free today and permanent the moment the library is published.
+An earlier draft of this document downgraded Epic 8 to "can safely wait" because the accessor can be
+added later without breaking anyone. That is true and it is beside the point. With no users, the
+question is not *what breaks existing consumers* — it is **what makes a stranger's first install
+worth doing.**
 
-**Decision 6 is not on that clock, contrary to an earlier draft of this document.** `CloudAdapter`
-is a plain interface whose members are all abstract, on Java 17, so a connection accessor can be
-added later as a `default` method — source- and binary-compatible, existing adapters unaffected.
-Deferring it costs framework users, not API flexibility.
+On that axis Epic 8 looks quite different. The PRD's primary user is a Java backend engineer testing
+a service that talks to S3, SQS, SNS or DynamoDB. That engineer is very probably on Spring Boot.
+Today they would install the library, find they cannot point their application context at the
+emulator, and go back to Testcontainers.
 
-Decision 2 is not on the clock either, but is what would falsify whichever shape decision 6 picks: a
-second adapter is the first real test of whether the abstraction holds.
+So Epic 8 may well be a launch feature — not because deferring it is expensive, but because shipping
+without it means shipping something much of the target audience cannot use for the thing they came
+for. That is a product judgement, and it is a better question than the compatibility one that
+replaced it in the first draft.
+
+The same correction applies to the Java baseline: an argument that a version bump "excludes
+consumers on 17" is an argument about consumers that do not exist. The live question is only whether
+to narrow who *can adopt*. See `docs/adr/0007-decline-the-java-21-bump.md`.
+
+### The one hard deadline
+
+Only item A is irreversible at publication, and only because Maven Central artifacts cannot be
+changed or deleted. Everything else on this list can be changed after a release at a cost, or
+before one for free. Item D is not on the clock but is what would falsify whichever shape F picks:
+a second adapter is the first real test of whether the abstraction holds.
 
 ## What the first pass changed in the plan
 
@@ -198,5 +234,9 @@ a floor below what the build achieves is permission to regress by the size of th
   epic title changes, since keys derive from titles.
 - Start with Story 1.1: it holds 30 of test-core's 32 uncovered branches, so nothing else in that
   module moves the floor.
-- Decision 1 is the only one with a hard deadline: free now, permanent after a first publish.
-  Decision 2 blocks the largest single body of work and is what would falsify decision 6.
+- Item A, the package rename, is the only thing with a hard deadline: free now, permanent after a
+  first publish. Do it before any release.
+- Items B and C are free work too; they were only ever "decisions" because of a compatibility cost
+  that does not exist yet.
+- Item D blocks the largest single body of work and is what would falsify whichever shape F picks.
+- Judge Epic 8 (F) on whether a first user can do what they came for, not on compatibility.

@@ -171,22 +171,30 @@ silently inherit the first's table, and the failure surfaces later in `putItem`,
 catch, as a raw SDK `ValidationException`. The test that breaks is not the test that caused
 it. That is Epic 7, and it is the clearest blocker.
 
-**One decision that becomes permanent.** The Java packages are `org.deveasy.*` while the
-coordinates are `com.enrichmeai`. Renaming is free today and irreversible after publication,
-because no later change rescues a consumer's `import` statements. That is Story 2.1.
+**Free work, cheap now and not later.** Nothing is published and there are no consumers, so
+several things usually treated as breaking changes cost nothing today. Rename the Java packages
+from `org.deveasy.*` to match the `com.enrichmeai` coordinates (Story 2.1) — an afternoon now,
+and permanent after publication, since no later change rescues a consumer's `import` statements.
+Take `CloudMode.LIVE` out until it works (Story 4.1) and drop `SECRETS` and `KMS` from
+`CloudServiceType` (Story 6.4); both are declared but unimplemented, and removing them breaks
+nobody.
 
 **Housekeeping.** The version is `0.3.0-alpha1-private.1`, which cannot go to a public
 registry as it stands, and the POM still carries OSSRH publishing configuration pointing at a
 decommissioned host, which would have to go before any modern publishing setup arrives
 (Story 6.3).
 
+**A product question rather than a technical one.** The framework gap described above is
+Epic 8. It is not blocked by compatibility — an accessor can be added at any time — but with no
+users the useful question is not what breaks existing consumers, it is what makes a first
+install worth doing. Most Java engineers testing cloud-backed services are on Spring Boot, and
+today they would find they cannot point their application context at the emulator and go back
+to Testcontainers. Whether that makes it a launch feature is a judgement, not a deduction.
+
 **Known and deliberately not blocking.** Coverage sits below its target, and `CloudExtension`
 — the injection path every user touches — is the thinnest part of it at 12 of 42 branches
-covered (Epic 1). `CloudMode.LIVE` is declared and branched on but untested and unguarded
-(Epic 4). One provider, emulator only, so the portability claim is a design intention rather
-than a demonstrated property (Epic 3). The framework-connection gap described above is Epic 8;
-it is not release-blocking, because `CloudAdapter` is a plain interface on Java 17 and an
-accessor can be added later as a `default` method without breaking implementers.
+covered (Epic 1). One provider, emulator only, so the portability claim is a design intention
+rather than a demonstrated property (Epic 3).
 
 The full readiness assessment, including the decisions that are open, is in
 [implementation-readiness.md](docs/specs/implementation-readiness.md).
