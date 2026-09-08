@@ -53,6 +53,27 @@
   swallows them and returns `null` or an empty list. The criteria now match the code.
 - The PRD's provenance pointed at a branch that has since been merged and deleted; it now
   tracks `main` at `3f31287`. PRD open question 6 is marked resolved, pointing at ADR 0006.
+- The backlog over-weighted backwards compatibility for a library that is unpublished and has
+  no consumers. Three items written up as decisions — the package rename, removing
+  `CloudMode.LIVE`, removing `SECRETS` and `KMS` — were decisions only because changing them
+  would break someone. Nobody exists to break, so they are free work, and the genuine decision
+  list drops from seven to three. Only the package rename has a hard deadline, because
+  publishing makes it permanent.
+- Epic 8 is re-judged on the right axis. It had been downgraded to "can safely wait" because an
+  accessor can be added later without breaking implementers. True, and beside the point: with no
+  users the question is what makes a first install worth doing, not what breaks existing ones.
+  Most Java engineers testing cloud-backed services are on Spring Boot, and today they cannot
+  use the library for that, which may make it a launch feature.
+- Story 7.3 blamed the wrong line and is retitled. It claimed `AwsDynamoDB`'s static `KEYS`
+  map went stale because `deleteTable` does not evict it. It does not: `ensureTableInternal`
+  calls `cacheKeysFromDescribe` on the table-exists path, which re-reads the live schema. The
+  real defect is that `ensureTable` returns without comparing the existing table's key schema
+  to the one requested, so a second test class silently inherits the first's table and the
+  failure surfaces later in `putItem` — which has no catch — as a raw `ValidationException`.
+- The README's opening line said "A toolkit for testing Java applications against cloud
+  services", which describes integration-testing an application. The library tests cloud
+  interactions. Corrected, and the limitation added to the PRD's Non-Users list where it is
+  the largest practical exclusion.
 
 ### Added
 - BMAD Method 6.12.0 and four planning artifacts under `docs/specs/`: product brief,
@@ -61,13 +82,22 @@
   decision had been taken but existed only in a pull request in another repository.
 - `docs/specs/implementation/`: expanded story files for the eight stories that can be
   built without a maintainer decision, plus a generated `sprint-status.yaml` covering all
-  26 stories.
-- `docs/specs/implementation-readiness.md`: the readiness verdict, and the five open
-  decisions that block the remaining eighteen stories.
+  29 stories.
+- `docs/specs/implementation-readiness.md`: the readiness verdict, and the open decisions
+  that block the rest of the backlog.
 - Epic 7 in `docs/specs/epics.md`, from three defects found while reading the code the
   coverage stories point at: `CloudExtension` never tracks or releases topics and tables,
   its cleanup swallows `Throwable` silently, and `AwsDynamoDB` caches table key schemas in
   a static map that `deleteTable` does not evict.
+- Epic 8, recording that a framework application cannot reach the emulator. Nothing in the
+  provider-neutral API exposes an endpoint or a credential, so a Spring Boot, Quarkus or
+  Micronaut context under test cannot be pointed at the emulator this library starts. The
+  only route is `org.deveasy.test.cloud.aws.internal.LocalStackHolder`, which costs the
+  provider neutrality the library exists for. Three candidate shapes for a connection
+  accessor are set out; none is chosen. This is new capability, not repair, and remains a
+  scope expansion for the maintainer to sign off. It is not release-blocking: `CloudAdapter`
+  is a plain interface on Java 17, so the accessor can arrive later as a `default` method
+  without breaking implementers.
 - Stories 1.5 and 1.6, because Epic 1's coverage arithmetic left no margin on either
   module. In `test-cloud-aws`, stories 1.2 and 1.3 expose 98 uncovered branches against a
   need of 79; in `test-core`, story 1.1 reaches 50 uncovered lines against a need of 39.

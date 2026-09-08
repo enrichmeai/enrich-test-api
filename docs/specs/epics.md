@@ -3,7 +3,7 @@ title: enrich-test-api
 type: epics-and-stories
 status: draft
 created: '2026-09-06'
-updated: '2026-09-06'
+updated: '2026-09-08'
 sources: ['docs/specs/PRD.md', 'docs/specs/architecture.md', 'docs/adr/0006-github-pages-disabled.md']
 ---
 
@@ -24,15 +24,30 @@ Two kinds of item are mixed together, and they are not interchangeable.
 expanded story file under `docs/specs/implementation/` carrying file paths, method names
 and concrete acceptance criteria.
 
-**Decisions** are not work. Stories 2.1, 3.1, 4.1, 5.1, 5.3 and 6.4 each ask the maintainer
-to choose something no amount of implementation can settle: a breaking package rename, a
-second cloud provider, whether an unimplemented enum value stays, who owns a repository
-secret. They are left at epic grain deliberately. Expanding them into implementation
-detail before the choice is made would be inventing the answer. `docs/specs/implementation-readiness.md`
-collects them in one place.
+**Decisions** are not work — but fewer of these are decisions than first appeared. The
+library is unpublished and has no consumers, and three stories were written up as decisions
+only because changing them would be a breaking change. There is nobody to break, so the
+deliberation is over before it starts:
 
-Epic 3 is the largest piece of work in the backlog and is entirely downstream of one
-decision, so its stories stay coarse until that decision lands.
+- **Story 2.1**, the package rename. Free today; 20 main sources, 12 test sources, two
+  `META-INF/services` filenames.
+- **Story 4.1**, `CloudMode.LIVE`. Removing an enum value breaks nobody. Take it out until it
+  works.
+- **Story 6.4**, `SECRETS` and `KMS`. Same, smaller.
+
+What remains are three genuine decisions: **3.1** the second provider, **5.1 / 5.3** the
+`NVD_API_KEY` owner and whether the audit gates merges, and **8.1** the shape of the
+connection accessor. Those stay at epic grain deliberately; expanding them before the choice
+is made would be inventing the answer. `docs/specs/implementation-readiness.md` collects the
+whole list.
+
+Epics 3 and 8 are each downstream of one of those, so their stories stay coarse. Epic 3 is
+the largest piece of work in the backlog.
+
+**Exactly one item has a hard deadline.** The package rename is free today and permanent the
+moment the library is published, because Maven Central artifacts cannot be changed or deleted
+and no later change rescues a consumer's `import` statements. Do it before any release.
+Everything else can move afterwards at a cost.
 
 ---
 
@@ -192,8 +207,12 @@ Expanded: `docs/specs/implementation/1-6-cover-the-remaining-test-core-classes.m
 `org.deveasy.*`. Every consumer sees the mismatch in their import statements. This is PRD open
 question 1.
 
-**Done when:** either the packages match the groupId, or a written decision records why they
-stay.
+**Not really a decision any more.** It was written up as one because renaming is breaking across
+every source file. The library is unpublished with no consumers, so it breaks nobody, and the cost
+is an afternoon. The only thing that makes this urgent is that publishing makes it permanent.
+
+**Done when:** the packages match the groupId — or, if they are deliberately kept, a written record
+says why, which after a release becomes the only available answer.
 
 ### Story 2.1: Decide whether the packages move
 
@@ -276,6 +295,10 @@ Acceptance: the suite runs the same features against each adapter present on the
 
 **Why:** the enum offers a mode the code does not implement end to end. That is a promise the
 library does not keep, and it is PRD open question 3.
+
+**Not really a decision any more, on the removal side.** Removing an enum value is breaking only if
+someone depends on it, and nobody does. Taking `LIVE` out until it works is free today and it can
+come back when the stories below are real.
 
 **Done when:** `LIVE` either works with a documented credential story, or is gone.
 
@@ -457,20 +480,158 @@ prevent the remaining resources from being released; the test run's own result i
 teardown failure. Whether teardown failure should fail the build is called out for decision rather
 than assumed.
 
-### Story 7.3: Fix the stale key cache in AwsDynamoDB
+### Story 7.3: Make ensureTable reject a table whose schema does not match
 
-As a test author, recreating a table with a different key schema does not silently use the old one.
+As a test author, asking for a table with a partition key I named either gets me that table or
+fails loudly — it never silently hands me someone else's.
 
-Context: found alongside Story 7.1. `AwsDynamoDB` keeps a `private static final Map<String, TableKeys> KEYS`
-keyed by table name only. It is static, so it is shared by every instance in the JVM, and nothing
-evicts from it. `deleteTable` does not clear it. Because the emulator container is also shared for the
-whole JVM, a table dropped and recreated with a different partition or sort key keeps the first
-schema's cached keys, and `getItem` then builds a request against the wrong attribute names. The
-symptom is a lookup that returns `null` for an item that is present.
+**This story previously blamed the wrong line, and the correction is the point of it.** An earlier
+draft was titled "Fix the stale key cache in AwsDynamoDB" and claimed that `deleteTable` failing to
+evict the static `KEYS` map meant a recreated table kept the first schema's cached keys. Reading
+`ensureTableInternal` again, that is not what happens: on the table-exists path it calls
+`cacheKeysFromDescribe`, which re-reads the live schema and overwrites the cache. The cache
+self-corrects. A developer sent to fix `KEYS` would have found nothing wrong and the real defect
+would have survived.
 
-This compounds Story 7.1: without cleanup, tables persist; with a stale cache, the persistence is
-also incorrect.
+**The real defect.** `ensureTableInternal` calls `describeTable`, and if the table exists it caches
+the keys and returns — **without comparing the existing schema to the one just requested**. The
+requested `pk` and `sk` arguments are discarded on that path. So:
 
-Acceptance: `deleteTable` evicts the table's entry; a test creates a table with one partition key,
-deletes it, recreates it with a different partition key, and reads back an item it wrote. Whether
-the cache should be per-instance rather than static is raised as a question, not decided here.
+1. Test class A calls `ensureTable("orders", "id")`. The table is created with partition key `id`.
+2. Class A ends. Nothing cleans the table up, because Story 7.1's tracking gap means tables are
+   never released, and the emulator container is shared for the whole JVM.
+3. Test class B calls `ensureTable("orders", "orderId")`. `describeTable` succeeds, so the method
+   returns having done nothing. B believes it has a table keyed on `orderId`; it has A's table
+   keyed on `id`.
+4. `putItem` then fails. It has **no catch block**, so the failure surfaces as a raw SDK
+   `ValidationException` about a missing key attribute.
+
+The test that breaks is not the test that caused it, and the message names neither. This is the
+sharpest edge in the library for the multi-test-class case, which is the PRD's UJ-2 — the
+standardisation journey the product is aimed at.
+
+Depends on Story 7.1 in the sense that cleanup removes the common trigger, but it does not depend on
+it for correctness: two classes running in either order with mismatched schemas is a defect whether
+or not cleanup exists.
+
+Acceptance: `ensureTable` compares the existing table's key schema to the requested partition and
+sort key, and on a mismatch fails with a message naming the table, the schema it found and the
+schema it was asked for. A test creates a table one way, calls `ensureTable` with a different
+partition key, and asserts that failure — not a `ValidationException` from a later `putItem`.
+Whether a mismatch should instead recreate the table is raised as a question, not decided here:
+silently dropping a table is its own footgun.
+
+Minor, and kept from the earlier draft because it is still true: `KEYS` is a `private static final
+Map` that nothing ever evicts. It grows for the life of the JVM, and after a `deleteTable` a
+`getItem` issued without an intervening `ensureTable` reads a stale key name against a table that
+is gone — which returns `null`, indistinguishable from a missing item. Worth clearing in
+`deleteTable` while in the file.
+
+---
+
+## Epic 8: Let a framework application reach the emulator
+
+**Why:** the library can test your cloud calls. It cannot help you integration-test your
+application. Nothing in the provider-neutral API exposes an endpoint or a credential, so a Spring
+Boot, Quarkus or Micronaut service under test cannot be pointed at the emulator the library
+started.
+
+Verified against the code rather than assumed:
+
+- `TestCloudConfig` exposes `provider()`, `mode()`, `regionOrLocation()`, `projectOrAccount()`.
+  Nothing else.
+- `CloudAdapter` exposes `provider()`, `initialize(TestCloudConfig)` and the four capability
+  getters. Nothing else.
+- The capability interfaces are pure operations.
+- No `springframework`, `quarkus`, `micronaut`, `jakarta` or `javax.inject` reference exists
+  anywhere in the sources or POMs.
+
+The only route to an endpoint is `org.deveasy.test.cloud.aws.internal.LocalStackHolder.get()`,
+which returns a Testcontainers `LocalStackContainer`. Reaching it costs a consumer three things at
+once: a dependency on a package named `internal` with no stability promise, a direct dependency on
+`test-cloud-aws` rather than the core, and Testcontainers types in their test code. The third
+undoes AD-1 and FR-1 — the provider neutrality that is the product's central claim.
+
+So the gap is not a missing integration module. It is that the provider-neutral API has no shape
+for the thing a framework integration would need.
+
+**Scope note.** This is **new capability**, not repair. The original engagement put new capabilities
+out of scope, and specifying it here does not change that: implementing Epic 8 is a scope expansion
+for the maintainer to sign off, separately from agreeing that the gap is real.
+
+**Judge this on whether a first user can do what they came for, not on compatibility.**
+
+An earlier draft of this epic argued it was release-blocking because every candidate shape adds a
+member to `CloudAdapter`, a fixed interface, and so breaks implementers. That was wrong twice over.
+`CloudAdapter` is a plain interface with all-abstract members on Java 17, so a `default` method is
+source- and binary-compatible — and in any case the library is unpublished with one implementer,
+which is your own, so there is nobody to break.
+
+Compatibility is simply the wrong axis. With no users, the question is not what breaks existing
+consumers; it is **what makes a stranger's first install worth doing.**
+
+On that axis this looks like a launch feature rather than a deferral. The PRD's primary user is a
+Java backend engineer testing a service that talks to S3, SQS, SNS or DynamoDB, and that engineer is
+very probably on Spring Boot. Today they install the library, discover they cannot point their
+application context at the emulator, and go back to Testcontainers. Shipping without this means
+shipping something a large part of the target audience cannot use for the thing they came for.
+
+That is a product judgement rather than an API one, and it belongs to the maintainer. What this epic
+asserts is only that the gap is real and the axis matters.
+
+**Done when:** a Spring Boot or Quarkus test can start the emulator through this library and
+configure the application under test against it, without naming AWS, importing an `internal`
+package, or depending on Testcontainers directly.
+
+### Story 8.1: Choose the shape of the connection accessor
+
+**Decision required. Blocked on the maintainer.**
+
+Three options, none obviously best.
+
+**Option A — a flat property map.** `Map<String, String> connectionProperties()` on `CloudAdapter`.
+Framework-agnostic, trivially consumed by a Spring `@DynamicPropertySource` or a Quarkus
+`QuarkusTestResourceLifecycleManager`, and adds no new types. The cost is that the keys become an
+unversioned contract in string form, and provider-neutral keys have to be invented and then honoured
+by every future adapter.
+
+**Option B — typed accessors.** `URI endpointFor(CloudServiceType)` plus a credentials accessor.
+Type-safe, uses the `CloudServiceType` enum that already exists, and makes the per-service shape
+explicit. The cost is that credentials need a type of their own, and the abstraction has to survive
+providers whose auth is not a key pair — which is most of them outside AWS, and is exactly what a
+second adapter would test.
+
+**Option C — a `ConnectionDetails` capability.** Model it as another `Capability`, consistent with
+the existing pattern, injectable through `@WithCloud` like the others. The most idiomatic fit for
+the current design, but it still requires a getter on `CloudAdapter`, so it does not avoid the
+breaking change — and a "capability" that describes the connection rather than performing operations
+sits oddly beside `BlobStorage` and `Queue`.
+
+Acceptance: an ADR records the choice and why, explicitly weighing the string-contract cost of A
+against the auth-model risk of B, and notes that Epic 3's second adapter is what would falsify
+either. It also records whether `SECRETS` and `KMS` (Story 6.4) should exist before the
+`CloudServiceType`-keyed shape of Option B is committed to.
+
+### Story 8.2: Implement the accessor for the AWS adapter
+
+**Blocked on Story 8.1.**
+
+Acceptance: the chosen accessor is implemented in `AwsCloudAdapter` and returns values sourced from
+the running LocalStack container; `LocalStackHolder` stops being the only route to an endpoint; no
+consumer needs to import anything under `internal`.
+
+### Story 8.3: Prove it with a framework test
+
+**Blocked on Story 8.2.**
+
+As a Spring Boot author, I can start my application in a test with its cloud client pointed at the
+emulator, call my own endpoint, and assert on the resulting bucket or table.
+
+Acceptance: a worked example exists — in `examples/`, not as a dependency of any published module —
+in which an application context is configured entirely from the provider-neutral accessor. The
+example's test code names no vendor SDK type and imports nothing from `test-cloud-aws`. If that
+proves impossible, the reason is the finding and needs an ADR.
+
+Note the example must not pull a framework into the library's own reactor. Whether `examples/`
+builds in CI is a separate call: it is the only thing that would stop the example rotting, and it
+is also the only thing that would put Spring on the build.

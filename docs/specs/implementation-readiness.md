@@ -3,7 +3,7 @@ title: enrich-test-api
 type: implementation-readiness
 status: current
 created: '2026-09-06'
-updated: '2026-09-06'
+updated: '2026-09-08'
 sources: ['docs/specs/PRD.md', 'docs/specs/architecture.md', 'docs/specs/epics.md']
 ---
 
@@ -14,9 +14,17 @@ that nothing records?**
 
 ## Verdict: CONCERNS
 
-Partly. Eight of the twenty-six stories can be built today from what is written down. Six cannot be
-built by anyone, at any skill level, because they are not implementation problems — they are choices
-only the maintainer can make. The remaining twelve sit downstream of those six.
+Partly. Eight of the twenty-nine stories are expanded and can be built today, and one is already
+complete.
+
+The blocking list is shorter than it first looked. The library is unpublished with no consumers, so
+three items previously written up as decisions — the package rename, removing `CloudMode.LIVE`,
+removing `SECRETS` and `KMS` — are not decisions at all. Each was a decision only because changing
+it would break someone, and there is nobody to break. They are free work.
+
+That leaves **three genuine decisions** nobody but the maintainer can settle, and only one item on
+the whole list with a hard deadline. Epic 7's three stories are unblocked work not yet expanded to
+story files; the rest sit downstream of the three decisions.
 
 This is not a defect in the planning. It is what the planning found. The useful response is to work
 the ready lane and answer the six questions in parallel, not to wait.
@@ -39,37 +47,91 @@ numbers, method names and acceptance criteria written against code that was read
 
 ## Decisions required — the blocking list
 
-None of these can be delegated to an implementer. Each is one question.
+**Read this first: the library is unpublished and has no consumers.** That is not a detail, it is
+what sorts this list. Three of the items below were written as decisions because changing them
+would be a breaking change. There is nobody to break. For those, the deliberation is over before it
+starts and only the work remains.
 
-1. **Do the Java packages move to `com.enrichmeai.*`?** (Story 2.1, PRD Q1)
-   Breaking across 20 main and 12 test sources, plus two `META-INF/services` files whose *names*
-   encode the interface FQN. Cheap now at `0.3.0-alpha1-private.1` with no published consumers;
-   expensive later. **Blocks:** Story 2.2.
+### Not decisions — free work, do it before publishing
 
-2. **Azure or GCP for the second adapter?** (Story 3.1, PRD Q2)
-   The product's central claim — that a test written against the core runs on any provider — is
-   unproven with one adapter. The architecture spine names this the single largest architectural
-   risk. Emulator coverage constrains the answer: Azurite covers blob and queue but neither Service
-   Bus nor Cosmos. **Blocks:** the whole of Epic 3, the largest piece of work in the backlog.
+**A. Move the Java packages to `com.enrichmeai.*`.** (Story 2.1, PRD Q1)
+Written up as a decision on the grounds that renaming is breaking across every source file. With no
+consumers it breaks nothing: 20 main sources, 12 test sources, and two `META-INF/services` files
+whose *names* encode the interface FQN. The coordinates are already `com.enrichmeai`, so the only
+question was ever whether the cost was worth the consistency, and today the cost is an afternoon.
 
-3. **Does `CloudMode.LIVE` stay?** (Story 4.1, PRD Q3)
-   `AwsClients` does branch on it and build clients from the default credential chain, so it is not
-   absent — it is untested, undocumented and unguarded. Keeping it means a credential story, a
-   destructive-operation guard and a profile. Removing it is a breaking enum change. **Blocks:**
-   Stories 4.2–4.4. Interacts with Epic 7: without resource cleanup, `LIVE` would leak real
-   resources.
+This is the one item on the whole list with a hard deadline. Maven Central artifacts cannot be
+changed or deleted, so the first publish pins every future consumer's `import` statements to
+`org.deveasy.*` permanently. Free now, irreversible later. **Do it before any release.**
 
-4. **Who provisions `NVD_API_KEY`, and does the audit gate merges or only report?** (Stories 5.1
-   and 5.3, PRD Q5)
-   Only the repository owner can create the secret. The gate is wired, guarded, and has never
-   audited anything. **Blocks:** Story 5.2, which cannot be scoped until the first report exists.
+**B. Take `CloudMode.LIVE` out until it works.** (Story 4.1, PRD Q3)
+Written up as a decision because removing an enum value is breaking. It breaks nobody. `AwsClients`
+does branch on `LIVE` and build clients from the default credential chain, so the mode is not
+absent — it is untested, undocumented, and unguarded against destructive operations on a real
+account. Shipping an enum value that does not work is a promise the code does not keep. Removing it
+costs nothing today and it can come back when Stories 4.2–4.4 are real.
 
-5. **Do `SECRETS` and `KMS` stay in `CloudServiceType`?** (Story 6.4, PRD Q4)
-   Declared with no interface behind them. Smallest of the six.
+**C. Take `SECRETS` and `KMS` out of `CloudServiceType`.** (Story 6.4, PRD Q4)
+Same reasoning, smaller. Declared with no interface behind them, and free to remove. Note it
+interacts with F below: one candidate shape there keys endpoints on `CloudServiceType`, so settling
+the enum first is the cheaper order.
+
+### Genuine decisions — nobody but the maintainer can settle these
+
+**D. Azure or GCP for the second adapter?** (Story 3.1, PRD Q2)
+The product's central claim — that a test written against the core runs on any provider — is
+unproven with one adapter, and the architecture spine names this the single largest architectural
+risk. Emulator coverage constrains the answer: Azurite covers blob and queue but neither Service Bus
+nor Cosmos, so a first Azure adapter could not implement PubSub or NoSqlTable against a supported
+emulator. **Blocks:** all of Epic 3, the largest body of work in the backlog. This is a genuine
+product-direction call with real cost either way.
+
+**E. Who provisions `NVD_API_KEY`, and does the audit gate merges or only report?** (Stories 5.1,
+5.3, PRD Q5)
+Only the repository owner can create the secret, so this is blocked on you in the most literal
+sense. The gate is wired, guarded, and has never audited anything. **Blocks:** Story 5.2, which
+cannot be scoped until a first report exists.
+
+**F. What shape does the connection accessor take?** (Story 8.1)
+A flat property map, typed accessors keyed on `CloudServiceType`, or a `ConnectionDetails`
+capability. **Blocks:** Stories 8.2 and 8.3. New capability rather than repair, so implementing it
+is a scope expansion to sign off separately from agreeing the gap is real.
+
+Not release-blocking on compatibility grounds — `CloudAdapter` is a plain interface on Java 17, so
+any shape can arrive later as a `default` method, and with no implementers but your own even that
+courtesy is optional. But see the next section: compatibility is the wrong axis to judge this on.
 
 PRD Q6, on GitHub Pages, is **resolved** — see `docs/adr/0006-github-pages-disabled.md`.
 
-## What this pass changed in the plan
+### What "no consumers" changes about Epic 8
+
+An earlier draft of this document downgraded Epic 8 to "can safely wait" because the accessor can be
+added later without breaking anyone. That is true and it is beside the point. With no users, the
+question is not *what breaks existing consumers* — it is **what makes a stranger's first install
+worth doing.**
+
+On that axis Epic 8 looks quite different. The PRD's primary user is a Java backend engineer testing
+a service that talks to S3, SQS, SNS or DynamoDB. That engineer is very probably on Spring Boot.
+Today they would install the library, find they cannot point their application context at the
+emulator, and go back to Testcontainers.
+
+So Epic 8 may well be a launch feature — not because deferring it is expensive, but because shipping
+without it means shipping something much of the target audience cannot use for the thing they came
+for. That is a product judgement, and it is a better question than the compatibility one that
+replaced it in the first draft.
+
+The same correction applies to the Java baseline: an argument that a version bump "excludes
+consumers on 17" is an argument about consumers that do not exist. The live question is only whether
+to narrow who *can adopt*. See `docs/adr/0007-decline-the-java-21-bump.md`.
+
+### The one hard deadline
+
+Only item A is irreversible at publication, and only because Maven Central artifacts cannot be
+changed or deleted. Everything else on this list can be changed after a release at a cost, or
+before one for free. Item D is not on the clock but is what would falsify whichever shape F picks:
+a second adapter is the first real test of whether the abstraction holds.
+
+## What the first pass changed in the plan
 
 **One story's premise was wrong and has been corrected.** Story 6.2 claimed the `.gitignore`
 patterns `src/main/resources/` and `src/test/resources/` were unanchored and therefore silently
@@ -97,12 +159,12 @@ recorded:
   behind a `// not tracking currently; placeholder for future` comment. Because the emulator
   container is shared for the whole JVM, resources survive between test classes.
 - Cleanup swallows `Throwable` silently, twice, so a failed teardown is invisible.
-- `AwsDynamoDB` caches table key schemas in a `static` map keyed by table name, and `deleteTable`
-  does not evict. A table dropped and recreated with a different key schema keeps the stale schema,
-  and `getItem` then returns `null` for an item that is present.
+- `ensureTable` returns without comparing an existing table's key schema to the one just requested,
+  so a second test class silently inherits the first's table. See the correction below — this bullet
+  originally blamed the wrong line.
 
-The third compounds the first: without cleanup, tables persist, and the cache makes that persistence
-incorrect rather than merely untidy.
+The third compounds the first: without cleanup, tables persist, and `ensureTable` then hands the
+next test class a table it did not ask for.
 
 **One acceptance criterion contradicted the code and was rewritten.** A draft of Story 1.2 required
 that `ResourceNotFoundException` and `DynamoDbException` each "surface a message naming the table".
@@ -110,6 +172,53 @@ They do not — the class swallows both and returns `null` or an empty list. A t
 draft would have failed and looked like a code bug. The criterion now describes the behaviour that
 exists, and the question of whether it is the right behaviour is raised separately rather than
 smuggled into a coverage story.
+
+## What the second pass changed
+
+**Story 7.3 blamed the wrong line, and has been retitled.** It was "Fix the stale key cache in
+`AwsDynamoDB`", on the reasoning that `deleteTable` fails to evict the static `KEYS` map so a
+recreated table reads through a stale schema. Reading `ensureTableInternal` again: on the
+table-exists path it calls `cacheKeysFromDescribe`, which re-reads the live schema and overwrites the
+cache. The cache self-corrects. A developer sent to that map would have found nothing wrong.
+
+The real defect is that `ensureTableInternal` calls `describeTable` and, if the table exists, returns
+**without comparing the existing key schema to the requested one** — the `pk` and `sk` arguments are
+discarded on that path. Combined with the cleanup gap, test class B asking for `orders` keyed on
+`orderId` silently receives class A's table keyed on `id`, and the failure lands later in `putItem`,
+which has no catch, as a raw SDK `ValidationException`. The test that breaks is not the test that
+caused it. Retitled to "Make `ensureTable` reject a table whose schema does not match"; the `KEYS`
+non-eviction survives as a minor sub-point, because it is still an unbounded static map.
+
+Retitling changed the generated tracking key, so `7-3-fix-the-stale-key-cache-in-awsdynamodb` appears
+as a dropped orphan in the sprint planner's report. Both keys were at `backlog`, so nothing needed
+carrying across.
+
+**Epic 8 is new: a framework application cannot reach the emulator.** The library drives cloud
+capabilities directly, which is what it was designed for. It cannot configure an application under
+test, and the reason is structural rather than a missing integration module: no endpoint and no
+credential is reachable from the provider-neutral API. `TestCloudConfig` exposes provider, mode,
+region and account; `CloudAdapter` exposes only `provider()`, `initialize()` and the four capability
+getters; the capabilities are pure operations. The single route to an endpoint is
+`org.deveasy.test.cloud.aws.internal.LocalStackHolder.get()`, which costs a consumer an `internal`
+package, a direct dependency on `test-cloud-aws`, and Testcontainers types — undoing AD-1 and FR-1.
+
+Nothing in the documentation said so. The README opened "A toolkit for testing Java applications
+against cloud services", which reads as the thing it does not do; that line is corrected, and the
+limitation is now in the PRD's Non-Users list, where it is the largest practical exclusion.
+
+Epic 8 is **new capability, not repair.** The original engagement put new capabilities out of scope.
+Specifying the gap does not change that: implementing it is a scope expansion for the maintainer to
+sign off separately.
+
+**And a correction inside this same pass.** The first draft of Epic 8 argued that every candidate
+shape adds a member to `CloudAdapter`, a fixed interface, and was therefore a breaking change owed
+before any Maven Central release. That was wrong, and it was wrong in the direction that manufactures
+urgency. `CloudAdapter` is a plain interface with all-abstract members, and the project targets Java
+17, so `default Map<String, String> connectionProperties() { return Map.of(); }` is source- and
+binary-compatible — an adapter that ignores it still compiles and still links.
+
+The practical consequence is that the release-blocker list is shorter than it looked. Only the
+package rename is irreversible at publication.
 
 ## Standing guard on Epic 1
 
@@ -121,9 +230,13 @@ a floor below what the build achieves is permission to regress by the size of th
 
 ## Next
 
-- `docs/specs/implementation/sprint-status.yaml` tracks all 26 stories. Regenerate it after any
+- `docs/specs/implementation/sprint-status.yaml` tracks all 29 stories. Regenerate it after any
   epic title changes, since keys derive from titles.
 - Start with Story 1.1: it holds 30 of test-core's 32 uncovered branches, so nothing else in that
   module moves the floor.
-- Answer the five decisions above whenever convenient. Only decision 2 blocks a large amount of
-  work.
+- Item A, the package rename, is the only thing with a hard deadline: free now, permanent after a
+  first publish. Do it before any release.
+- Items B and C are free work too; they were only ever "decisions" because of a compatibility cost
+  that does not exist yet.
+- Item D blocks the largest single body of work and is what would falsify whichever shape F picks.
+- Judge Epic 8 (F) on whether a first user can do what they came for, not on compatibility.
