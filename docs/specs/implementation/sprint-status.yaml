@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-06-2026 22:10
-last_updated: 09-09-2026 12:31
+last_updated: 09-09-2026 12:43
 project: enrich-test-api
 project_key: NOKEY
 tracking_system: file-system
@@ -69,10 +69,10 @@ development_status:
   5-3-decide-whether-the-audit-blocks-merges: backlog
   epic-5-retrospective: optional
 
-  epic-6: backlog
+  epic-6: in-progress
   6-1-decide-the-fate-of-github-pages: done
   6-2-correct-the-misleading-gitignore-patterns: ready-for-dev
-  6-3-remove-the-inert-publishing-configuration: ready-for-dev
+  6-3-remove-the-inert-publishing-configuration: review
   6-4-decide-on-secrets-and-kms: backlog
   epic-6-retrospective: optional
 

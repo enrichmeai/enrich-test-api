@@ -416,6 +416,10 @@ Expanded: `docs/specs/implementation/6-2-correct-the-misleading-gitignore-patter
 
 ### Story 6.3: Remove the inert publishing configuration
 
+**Scope changed 2026-09-09.** Publishing is now in scope (ADR 0009), so the seven items were
+replaced with a working Central Portal release path rather than deleted. The story file records
+which acceptance criteria still apply.
+
 As a maintainer, I can read the POM without inferring capabilities the project does not have.
 
 Context: the POM carries a full OSSRH publishing setup that nothing exercises, against a host that
