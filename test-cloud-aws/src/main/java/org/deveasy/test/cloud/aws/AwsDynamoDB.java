@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import org.deveasy.test.cloud.aws.internal.AwsClients;
@@ -50,6 +51,18 @@ public final class AwsDynamoDB implements NoSqlTable {
       this.pk = pk;
       this.sk = sk;
     }
+
+    boolean sameAs(String otherPk, String otherSk) {
+      return pk.equals(otherPk) && Objects.equals(sk, otherSk);
+    }
+
+    String describe() {
+      return describe(pk, sk);
+    }
+
+    static String describe(String pk, String sk) {
+      return "[partitionKey=" + pk + ", sortKey=" + (sk == null ? "<none>" : sk) + "]";
+    }
   }
 
   private static final Map<String, TableKeys> KEYS = new ConcurrentHashMap<>();
@@ -76,13 +89,26 @@ public final class AwsDynamoDB implements NoSqlTable {
   }
 
   private void ensureTableInternal(String tableName, String pk, String sk) {
-    try {
-      ddb.describeTable(DescribeTableRequest.builder().tableName(tableName).build());
-      // cache keys if not yet
-      cacheKeysFromDescribe(tableName);
+    // A blank sort key means "no sort key", the same reading the create path below gives it.
+    String requestedSk = (sk == null || sk.isBlank()) ? null : sk;
+    TableKeys existing = describeKeys(tableName);
+    if (existing != null) {
+      // Never adopt a table whose schema is not the one asked for. Without this check the caller
+      // believes it has a table keyed the way it said, and the failure lands later in putItem as a
+      // raw SDK ValidationException from a test that did nothing wrong.
+      if (!existing.sameAs(pk, requestedSk)) {
+        throw new IllegalStateException(
+            "Table '"
+                + tableName
+                + "' already exists with key schema "
+                + existing.describe()
+                + " but ensureTable was asked for "
+                + TableKeys.describe(pk, requestedSk)
+                + ". The existing table was left untouched; delete it or use a different table"
+                + " name.");
+      }
+      KEYS.put(tableName, existing);
       return;
-    } catch (ResourceNotFoundException notFound) {
-      // create
     }
     List<AttributeDefinition> attrs = new ArrayList<>();
     attrs.add(
@@ -92,13 +118,14 @@ public final class AwsDynamoDB implements NoSqlTable {
             .build());
     List<KeySchemaElement> schema = new ArrayList<>();
     schema.add(KeySchemaElement.builder().attributeName(pk).keyType(KeyType.HASH).build());
-    if (sk != null && !sk.isBlank()) {
+    if (requestedSk != null) {
       attrs.add(
           AttributeDefinition.builder()
-              .attributeName(sk)
+              .attributeName(requestedSk)
               .attributeType(ScalarAttributeType.S)
               .build());
-      schema.add(KeySchemaElement.builder().attributeName(sk).keyType(KeyType.RANGE).build());
+      schema.add(
+          KeySchemaElement.builder().attributeName(requestedSk).keyType(KeyType.RANGE).build());
     }
     CreateTableRequest.Builder b =
         CreateTableRequest.builder()
@@ -109,7 +136,7 @@ public final class AwsDynamoDB implements NoSqlTable {
     ddb.createTable(b.build());
     // wait until active (simple describe loop)
     waitForActive(tableName);
-    KEYS.put(tableName, new TableKeys(pk, sk));
+    KEYS.put(tableName, new TableKeys(pk, requestedSk));
   }
 
   private void waitForActive(String tableName) {
@@ -268,25 +295,27 @@ public final class AwsDynamoDB implements NoSqlTable {
   }
 
   private TableKeys cacheKeysFromDescribe(String table) {
+    TableKeys tk = describeKeys(table);
+    if (tk != null) KEYS.put(table, tk);
+    return tk;
+  }
+
+  /** Reads the live key schema of a table, or returns {@code null} if the table does not exist. */
+  private TableKeys describeKeys(String table) {
+    DescribeTableResponse d;
     try {
-      DescribeTableResponse d =
-          ddb.describeTable(DescribeTableRequest.builder().tableName(table).build());
-      if (d.table() == null) return null;
-      String pk = null;
-      String sk = null;
-      for (KeySchemaElement e : d.table().keySchema()) {
-        if (e.keyType() == KeyType.HASH) pk = e.attributeName();
-        else if (e.keyType() == KeyType.RANGE) sk = e.attributeName();
-      }
-      if (pk != null) {
-        TableKeys tk = new TableKeys(pk, sk);
-        KEYS.put(table, tk);
-        return tk;
-      }
-      return null;
+      d = ddb.describeTable(DescribeTableRequest.builder().tableName(table).build());
     } catch (ResourceNotFoundException e) {
       return null;
     }
+    if (d.table() == null) return null;
+    String pk = null;
+    String sk = null;
+    for (KeySchemaElement e : d.table().keySchema()) {
+      if (e.keyType() == KeyType.HASH) pk = e.attributeName();
+      else if (e.keyType() == KeyType.RANGE) sk = e.attributeName();
+    }
+    return pk == null ? null : new TableKeys(pk, sk);
   }
 
   private static Map<String, AttributeValue> toAttributes(Map<String, Object> item) {
