@@ -23,11 +23,11 @@ has enough branches to matter.
 
 | Path | Role |
 |---|---|
-| `test-core/src/main/java/org/deveasy/test/core/junit/CloudExtension.java` | Under test. Do not modify in this story. |
-| `test-core/src/test/java/org/deveasy/test/core/junit/WithCloudInjectionTest.java` | The one existing test. Extend or sit beside it. |
-| `test-core/src/test/java/org/deveasy/test/core/junit/support/FakeCloudAdapter.java` | The in-module fake adapter. Most of this story is making it configurable. |
-| `test-core/src/test/java/org/deveasy/test/core/junit/support/FakeBlobStorage.java` | Existing fake capability. |
-| `test-core/src/test/resources/META-INF/services/org.deveasy.test.core.cloud.spi.CloudAdapter` | Registers the fake. Its **filename** is the SPI interface's FQN — do not rename it. |
+| `test-core/src/main/java/com/enrichmeai/test/core/junit/CloudExtension.java` | Under test. Do not modify in this story. |
+| `test-core/src/test/java/com/enrichmeai/test/core/junit/WithCloudInjectionTest.java` | The one existing test. Extend or sit beside it. |
+| `test-core/src/test/java/com/enrichmeai/test/core/junit/support/FakeCloudAdapter.java` | The in-module fake adapter. Most of this story is making it configurable. |
+| `test-core/src/test/java/com/enrichmeai/test/core/junit/support/FakeBlobStorage.java` | Existing fake capability. |
+| `test-core/src/test/resources/META-INF/services/com.enrichmeai.test.core.cloud.spi.CloudAdapter` | Registers the fake. Its **filename** is the SPI interface's FQN — do not rename it. |
 
 ## Current coverage
 

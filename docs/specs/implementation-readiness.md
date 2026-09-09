@@ -59,7 +59,7 @@ starts and only the work remains.
 
 ### Not decisions — free work, do it before publishing
 
-**A. Move the Java packages to `com.enrichmeai.*`.** (Story 2.1, PRD Q1)
+**A. Move the Java packages to `com.enrichmeai.*`.** (Story 2.1, PRD Q1) **Done 2026-09-09, ADR 0008.**
 Written up as a decision on the grounds that renaming is breaking across every source file. With no
 consumers it breaks nothing: 20 main sources, 12 test sources, and two `META-INF/services` files
 whose *names* encode the interface FQN. The coordinates are already `com.enrichmeai`, so the only
@@ -204,7 +204,7 @@ test, and the reason is structural rather than a missing integration module: no 
 credential is reachable from the provider-neutral API. `TestCloudConfig` exposes provider, mode,
 region and account; `CloudAdapter` exposes only `provider()`, `initialize()` and the four capability
 getters; the capabilities are pure operations. The single route to an endpoint is
-`org.deveasy.test.cloud.aws.internal.LocalStackHolder.get()`, which costs a consumer an `internal`
+`com.enrichmeai.test.cloud.aws.internal.LocalStackHolder.get()`, which costs a consumer an `internal`
 package, a direct dependency on `test-cloud-aws`, and Testcontainers types — undoing AD-1 and FR-1.
 
 Nothing in the documentation said so. The README opened "A toolkit for testing Java applications

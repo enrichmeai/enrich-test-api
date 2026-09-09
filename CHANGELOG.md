@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed
+- **BREAKING: Java packages.** `org.deveasy.*` is now `com.enrichmeai.*`, matching the
+  groupId. Every import changes by replacing the first two segments; everything after
+  them is unchanged (`org.deveasy.test.core.junit.WithCloud` becomes
+  `com.enrichmeai.test.core.junit.WithCloud`). Both
+  `META-INF/services/com.enrichmeai.test.core.cloud.spi.CloudAdapter` registration files
+  are renamed with their contents, so an adapter registered under the old file name is
+  no longer found. Nobody consumes the library yet, which is why this is free now and
+  why it had to land before the first release. See ADR 0008.
+
 ### Fixed
 - The build compiles again. The 2018 legacy step definitions in `test-feature/src/main`
   and `test-core`'s `ResourceHelper` referenced dependencies that had been removed from
@@ -37,7 +47,8 @@
   file and would also rename both
   `META-INF/services/org.deveasy.test.core.cloud.spi.CloudAdapter` registration
   files, whose names derive from the interface's fully qualified name. Tracked as
-  Epic 2 in `docs/specs/epics.md`; the decision is open.
+  Epic 2 in `docs/specs/epics.md`; the decision is open. *Superseded: the packages were
+  renamed on 2026-09-09, see `[Unreleased]` above and ADR 0008.*
 - Dependency versions are centralised in the parent as BOM imports (AWS SDK v2,
   Testcontainers, JUnit, Cucumber, Jackson), per ADR 0005.
 - OWASP Dependency-Check moved out of the default lifecycle into an `owasp` profile,

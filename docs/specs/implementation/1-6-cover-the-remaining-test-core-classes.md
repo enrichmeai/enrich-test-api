@@ -29,12 +29,12 @@ the epic and it is what turns Epic 1 from arithmetically-just-possible into comf
 
 | Path | Coverage |
 |---|---|
-| `test-core/src/main/java/org/deveasy/test/core/cloud/CloudServiceType.java` | 0 / 7 lines |
-| `test-core/src/main/java/org/deveasy/test/core/cloud/spi/CloudAdapters.java` | 13 / 20 lines, 2 / 4 branches |
-| `test-core/src/main/java/org/deveasy/test/core/cloud/TestCloudConfig.java` | 8 / 14 lines |
-| `test-core/src/main/java/org/deveasy/test/core/cloud/TestCloudConfig.Builder` | 11 / 15 lines |
+| `test-core/src/main/java/com/enrichmeai/test/core/cloud/CloudServiceType.java` | 0 / 7 lines |
+| `test-core/src/main/java/com/enrichmeai/test/core/cloud/spi/CloudAdapters.java` | 13 / 20 lines, 2 / 4 branches |
+| `test-core/src/main/java/com/enrichmeai/test/core/cloud/TestCloudConfig.java` | 8 / 14 lines |
+| `test-core/src/main/java/com/enrichmeai/test/core/cloud/TestCloudConfig.Builder` | 11 / 15 lines |
 
-Unit tests, no container. Name them `*Test` so Surefire runs them. `test-core/src/test/java/org/deveasy/test/core/CoreSmokeTest.java`
+Unit tests, no container. Name them `*Test` so Surefire runs them. `test-core/src/test/java/com/enrichmeai/test/core/CoreSmokeTest.java`
 is the existing home for this kind of test.
 
 ## Acceptance criteria
@@ -43,7 +43,7 @@ is the existing home for this kind of test.
 covered, so `values()` and `valueOf` round-tripping is enough to move all of them.
 
 **AC-2 — `CloudAdapters` finds an adapter.** With the test fake registered via
-`test-core/src/test/resources/META-INF/services/org.deveasy.test.core.cloud.spi.CloudAdapter`,
+`test-core/src/test/resources/META-INF/services/com.enrichmeai.test.core.cloud.spi.CloudAdapter`,
 `CloudAdapters.get` returns it and the returned adapter has been initialised with the supplied
 config.
 

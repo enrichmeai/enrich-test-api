@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-06-2026 22:10
-last_updated: 09-09-2026 08:29
+last_updated: 09-09-2026 12:31
 project: enrich-test-api
 project_key: NOKEY
 tracking_system: file-system
@@ -44,9 +44,9 @@ development_status:
   1-6-cover-the-remaining-test-core-classes: ready-for-dev
   epic-1-retrospective: optional
 
-  epic-2: backlog
-  2-1-decide-whether-the-packages-move: backlog
-  2-2-execute-the-rename: backlog
+  epic-2: in-progress
+  2-1-decide-whether-the-packages-move: done
+  2-2-execute-the-rename: review
   epic-2-retrospective: optional
 
   epic-3: backlog

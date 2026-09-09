@@ -14,7 +14,7 @@ As a maintainer, I can see when teardown failed rather than inheriting a pollute
 
 ## What is there
 
-`CloudExtension.afterAll` (`test-core/src/main/java/org/deveasy/test/core/junit/CloudExtension.java`
+`CloudExtension.afterAll` (`test-core/src/main/java/com/enrichmeai/test/core/junit/CloudExtension.java`
 :97–121 at `ef907e1`) releases tracked buckets and queues in two copies of the same loop. Each
 loop body is:
 
@@ -38,9 +38,9 @@ change the result"; the behaviour to add is "and somebody can see it happened".
 
 | Path | Role |
 |---|---|
-| `test-core/src/main/java/org/deveasy/test/core/junit/CloudExtension.java` | Under change: `afterAll` :97–121. Story 7.1 adds two more loops of the same shape here, so land the two stories together and write the loop once. |
-| `test-core/src/test/java/org/deveasy/test/core/junit/CloudExtensionCleanupTest.java` | Shared with Story 7.1. The failure cases live beside the success cases because they need the same fixtures and the same launcher harness. |
-| `test-core/src/test/java/org/deveasy/test/core/junit/support/Fake*.java` | Each fake gains a way to make `delete*` of a named resource throw, and records which deletes were attempted. |
+| `test-core/src/main/java/com/enrichmeai/test/core/junit/CloudExtension.java` | Under change: `afterAll` :97–121. Story 7.1 adds two more loops of the same shape here, so land the two stories together and write the loop once. |
+| `test-core/src/test/java/com/enrichmeai/test/core/junit/CloudExtensionCleanupTest.java` | Shared with Story 7.1. The failure cases live beside the success cases because they need the same fixtures and the same launcher harness. |
+| `test-core/src/test/java/com/enrichmeai/test/core/junit/support/Fake*.java` | Each fake gains a way to make `delete*` of a named resource throw, and records which deletes were attempted. |
 
 ## Design
 
@@ -73,7 +73,7 @@ whether it *should* see it is below.
 
 **AC-1 — the failure is visible, with the name and the cause.** With a fake whose `deleteBucket`
 throws for `b-fails`, running a fixture class that ensured `b-fails` produces exactly one JUL record
-at `WARNING` on the `org.deveasy.test.core.junit.CloudExtension` logger whose message contains
+at `WARNING` on the `com.enrichmeai.test.core.junit.CloudExtension` logger whose message contains
 `bucket` and `b-fails`, and whose attached throwable is the exception the fake threw. Assert by
 attaching a `Handler` for the duration of the launch, and remove it afterwards.
 

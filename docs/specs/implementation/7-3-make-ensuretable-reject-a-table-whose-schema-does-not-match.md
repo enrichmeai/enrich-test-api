@@ -15,7 +15,7 @@ fails loudly — it never silently hands me someone else's.
 
 ## The defect, at the line
 
-`AwsDynamoDB.ensureTableInternal` (`test-cloud-aws/src/main/java/org/deveasy/test/cloud/aws/AwsDynamoDB.java`
+`AwsDynamoDB.ensureTableInternal` (`test-cloud-aws/src/main/java/com/enrichmeai/test/cloud/aws/AwsDynamoDB.java`
 :78–113 at `ef907e1`):
 
 ```java
@@ -45,9 +45,9 @@ creates `dev-easy-test-users` keyed on `userId` and never deletes it) reproduces
 
 | Path | Role |
 |---|---|
-| `test-cloud-aws/src/main/java/org/deveasy/test/cloud/aws/AwsDynamoDB.java` | Under change: `ensureTableInternal` :78–113, `cacheKeysFromDescribe` :270–290, `TableKeys` :45–53. `deleteTable` :134–143 is discussed below and not changed. |
-| `test-cloud-aws/src/test/java/org/deveasy/test/cloud/aws/AwsDynamoDbSchemaMismatchIT.java` | New. Named `*IT` so Failsafe runs it with the container. |
-| `test-cloud-aws/src/test/java/org/deveasy/test/cloud/aws/CloudExtensionMultiClassIT.java` | Story 7.1's end-to-end test; its class B is the case this story makes pass for the right reason. |
+| `test-cloud-aws/src/main/java/com/enrichmeai/test/cloud/aws/AwsDynamoDB.java` | Under change: `ensureTableInternal` :78–113, `cacheKeysFromDescribe` :270–290, `TableKeys` :45–53. `deleteTable` :134–143 is discussed below and not changed. |
+| `test-cloud-aws/src/test/java/com/enrichmeai/test/cloud/aws/AwsDynamoDbSchemaMismatchIT.java` | New. Named `*IT` so Failsafe runs it with the container. |
+| `test-cloud-aws/src/test/java/com/enrichmeai/test/cloud/aws/CloudExtensionMultiClassIT.java` | Story 7.1's end-to-end test; its class B is the case this story makes pass for the right reason. |
 
 ## Current coverage
 

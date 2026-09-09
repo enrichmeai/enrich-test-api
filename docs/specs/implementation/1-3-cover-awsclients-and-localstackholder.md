@@ -16,8 +16,8 @@ As a maintainer, I can rely on client construction and the container race being 
 
 | Path | Coverage |
 |---|---|
-| `test-cloud-aws/src/main/java/org/deveasy/test/cloud/aws/internal/AwsClients.java` | 51 / 71 lines, 6 / 12 branches |
-| `test-cloud-aws/src/main/java/org/deveasy/test/cloud/aws/internal/LocalStackHolder.java` | 13 / 24 lines, 3 / 8 branches |
+| `test-cloud-aws/src/main/java/com/enrichmeai/test/cloud/aws/internal/AwsClients.java` | 51 / 71 lines, 6 / 12 branches |
+| `test-cloud-aws/src/main/java/com/enrichmeai/test/cloud/aws/internal/LocalStackHolder.java` | 13 / 24 lines, 3 / 8 branches |
 
 ## AwsClients — the cheap half
 

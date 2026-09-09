@@ -21,10 +21,10 @@ Hexagonal, ports and adapters. The ports are the Capability interfaces and the `
 
 | Hexagon role | Maven module | Java package |
 | --- | --- | --- |
-| Domain and ports | `test-core` | `org.deveasy.test.core.cloud`, `.cloud.capability`, `.cloud.spi` |
-| Driving adapter (JUnit) | `test-core` | `org.deveasy.test.core.junit` |
-| Driven adapter (AWS) | `test-cloud-aws` | `org.deveasy.test.cloud.aws` |
-| Driving adapter (BDD) | `test-feature` | `org.deveasy.test.feature.cloud` (test sources only) |
+| Domain and ports | `test-core` | `com.enrichmeai.test.core.cloud`, `.cloud.capability`, `.cloud.spi` |
+| Driving adapter (JUnit) | `test-core` | `com.enrichmeai.test.core.junit` |
+| Driven adapter (AWS) | `test-cloud-aws` | `com.enrichmeai.test.cloud.aws` |
+| Driving adapter (BDD) | `test-feature` | `com.enrichmeai.test.feature.cloud` (test sources only) |
 
 ## Invariants & Rules
 
@@ -38,11 +38,11 @@ Hexagonal, ports and adapters. The ports are the Capability interfaces and the `
 
 - **Binds:** FR-3, `CloudAdapters`, all provider modules
 - **Prevents:** a compile-time `new AwsCloudAdapter()` in core or in a test, which reintroduces the coupling AD-1 removes.
-- **Rule:** provider resolution goes through `java.util.ServiceLoader` on `CloudAdapter`, registered under `META-INF/services/org.deveasy.test.core.cloud.spi.CloudAdapter`. The service file is named for the Java package and is unaffected by Maven coordinate changes.
+- **Rule:** provider resolution goes through `java.util.ServiceLoader` on `CloudAdapter`, registered under `META-INF/services/com.enrichmeai.test.core.cloud.spi.CloudAdapter`. The service file is named for the Java package and is unaffected by Maven coordinate changes.
 
 ### AD-3 — Capability interfaces stay small and provider-neutral [ADOPTED]
 
-- **Binds:** FR-2, `org.deveasy.test.core.cloud.capability.*`
+- **Binds:** FR-2, `com.enrichmeai.test.core.cloud.capability.*`
 - **Prevents:** the interfaces drifting toward being a full cloud SDK, which would make a second adapter unimplementable.
 - **Rule:** a method may only be added to a Capability if it is implementable on at least two providers using their emulators. Types in signatures come from `java.*` only.
 
@@ -151,19 +151,19 @@ The dashed edge is the whole design. `test-feature` never references an AWS type
 enrich-test-api/
   pom.xml                  # parent: BOM imports, all plugin config, gates
   test-core/               # ports. no vendor SDK. AD-1
-    src/main/java/org/deveasy/test/core/
+    src/main/java/com/enrichmeai/test/core/
       cloud/               # TestCloudConfig, CloudProvider, CloudMode, Capability
         capability/        # BlobStorage, Queue, PubSub, NoSqlTable
         spi/               # CloudAdapter, CloudAdapters
       junit/               # CloudExtension, WithCloud
   test-cloud-aws/          # driven adapter. AD-2, AD-5
-    src/main/java/org/deveasy/test/cloud/aws/
+    src/main/java/com/enrichmeai/test/cloud/aws/
       internal/            # AwsClients, LocalStackHolder
     src/main/resources/META-INF/services/
-      org.deveasy.test.core.cloud.spi.CloudAdapter
+      com.enrichmeai.test.core.cloud.spi.CloudAdapter
     src/test/java/...IT.java
   test-feature/            # driving adapter. test sources only, no main
-    src/test/java/org/deveasy/test/feature/cloud/
+    src/test/java/com/enrichmeai/test/feature/cloud/
     src/test/resources/features/
   docs/
     adr/                   # 0001-0005
@@ -211,7 +211,7 @@ sequenceDiagram
 
 - **A second provider adapter.** The SPI is designed for one but unproven by one. Until an Azure or GCP adapter exists, AD-1 and AD-3 are asserted rather than demonstrated. This is the single largest architectural risk.
 - **`CloudMode.LIVE`.** Needs a credential-resolution decision, a cost-control decision, and a story for destructive operations against real accounts. The enum value exists; the path does not.
-- **Java package rename to `com.enrichmeai.*`.** The groupId moved; the packages did not. Deferred because it is breaking across every file and touches the `META-INF/services` file name. Wants its own decision.
+- **Java package rename.** Done 2026-09-09, see `docs/adr/0008-move-the-java-packages-to-com-enrichmeai.md`; the packages now match the groupId.
 - **SECRETS and KMS capabilities.** Declared in `CloudServiceType`, no interface behind them.
 - **Parallel test execution.** AD-5 gives one shared container; whether capabilities are safe under concurrent tests is untested and unspecified.
 - **Maven Central publishing.** The POM still carries OSSRH `distributionManagement` and a nexus-staging plugin, which are inert and unverified.
