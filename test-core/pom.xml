@@ -3,7 +3,7 @@
     <parent>
         <groupId>com.enrichmeai</groupId>
         <artifactId>enrich-test-api</artifactId>
-        <version>0.3.0-alpha1-private.1</version>
+        <version>0.3.0-alpha1-SNAPSHOT</version>
     </parent>
     <artifactId>test-core</artifactId>
     <name>enrich test core</name>

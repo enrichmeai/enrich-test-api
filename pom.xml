@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.enrichmeai</groupId>
     <artifactId>enrich-test-api</artifactId>
-    <version>0.3.0-alpha1-private.1</version>
+    <version>0.3.0-alpha1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>enrich-test-api</name>
     <description>API for making the testing easy</description>
@@ -23,7 +23,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.release>17</maven.compiler.release>
         <!-- Deterministic timestamp for Reproducible Builds (ISO-8601 UTC) -->
-        <project.build.outputTimestamp>2025-01-01T00:00:00Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2026-09-09T11:45:45Z</project.build.outputTimestamp>
 
         <!-- Dependency baseline (ADR 0005): centralised here, imported as BOMs below. -->
         <aws.sdk.v2.version>2.25.64</aws.sdk.v2.version>
@@ -69,10 +69,6 @@
             <id>central</id>
             <url>https://repo.maven.apache.org/maven2</url>
         </pluginRepository>
-        <pluginRepository>
-            <id>sonatype.org</id>
-            <url>https://oss.sonatype.org/content/repositories/releases</url>
-        </pluginRepository>
     </pluginRepositories>
 
     <repositories>
@@ -82,16 +78,11 @@
         </repository>
     </repositories>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
+    <!--
+      No distributionManagement: releases go to the Sonatype Central Portal through the
+      central-publishing-maven-plugin in the `release` profile below, which needs none.
+      The old OSSRH entries pointed at oss.sonatype.org, decommissioned in 2025. See ADR 0009.
+    -->
 
     <!--
       BOM imports only. Per ADR 0005 the parent centralises versions and prefers BOMs so
@@ -163,8 +154,14 @@
     </dependencyManagement>
 
     <profiles>
+        <!--
+          Release profile: the only path that signs and uploads. A plain `mvn verify` never
+          activates it, so the default build needs no key and no token (AD-9). The release
+          workflow runs `mvn -B -Prelease -pl '!test-feature' deploy` on JDK 17 (ADR 0007);
+          test-feature has no main sources and is not published. See ADR 0009.
+        -->
         <profile>
-            <id>sign-source-javadoc</id>
+            <id>release</id>
             <build>
                 <plugins>
                     <plugin>
@@ -188,8 +185,50 @@
                                 <goals>
                                     <goal>jar</goal>
                                 </goals>
+                                <configuration>
+                                    <doclint>none</doclint>
+                                    <source>17</source>
+                                </configuration>
                             </execution>
                         </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <!-- No terminal in CI: the passphrase arrives in the
+                                         MAVEN_GPG_PASSPHRASE environment variable. -->
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.11.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <!-- Credentials come from the `central` server in settings.xml: a
+                                 Portal user token, never the account password. -->
+                            <publishingServerId>central</publishingServerId>
+                            <!-- The Portal validates the bundle; a person then presses Publish on
+                                 central.sonatype.com. Flip to true once the flow has been seen
+                                 to work end to end. -->
+                            <autoPublish>false</autoPublish>
+                            <waitUntil>VALIDATED</waitUntil>
+                            <deploymentName>${project.groupId}:${project.artifactId}:${project.version}</deploymentName>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -315,7 +354,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-gpg-plugin</artifactId>
-                    <version>1.6</version>
+                    <version>3.2.8</version>
                 </plugin>
 
 
@@ -331,14 +370,6 @@
                     <version>2.9</version>
                 </plugin>
 
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5.3</version>
-                    <configuration>
-                        <tagNameFormat>v@{project.version}</tagNameFormat>
-                    </configuration>
-                </plugin>
 
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -420,37 +451,10 @@
                         </execution>
                     </executions>
                 </plugin>
-                <plugin>
-                    <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.6.7</version>
-                </plugin>
             </plugins>
         </pluginManagement>
 
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <configuration>
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
-                    <useReleaseProfile>false</useReleaseProfile>
-                    <releaseProfiles>release</releaseProfiles>
-                    <goals>deploy</goals>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <!--Manually review the non-snapshot artifacts for a while before automating the release -->
-                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
-
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -611,14 +615,6 @@
         </plugin>
         </plugins>
 
-
-        <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ssh</artifactId>
-                <version>2.10</version>
-            </extension>
-        </extensions>
     </build>
 
 
