@@ -1,9 +1,9 @@
 package steps;
 
+import com.enrichmeai.test.core.cloud.CloudProvider;
+import com.enrichmeai.test.core.cloud.TestCloudConfig;
 import java.util.HashMap;
 import java.util.Map;
-import org.deveasy.test.core.cloud.CloudProvider;
-import org.deveasy.test.core.cloud.TestCloudConfig;
 
 /** Simple per-scenario shared state holder for Cucumber step definitions. */
 public class ScenarioState {

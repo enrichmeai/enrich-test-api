@@ -1,10 +1,10 @@
 package steps;
 
+import com.enrichmeai.test.core.cloud.CloudMode;
+import com.enrichmeai.test.core.cloud.CloudProvider;
+import com.enrichmeai.test.core.cloud.TestCloudConfig;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
-import org.deveasy.test.core.cloud.CloudMode;
-import org.deveasy.test.core.cloud.CloudProvider;
-import org.deveasy.test.core.cloud.TestCloudConfig;
 
 /** Background/setup steps for selecting cloud provider/mode/region. */
 public class ConfigSteps {

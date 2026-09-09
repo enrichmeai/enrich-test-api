@@ -2,9 +2,9 @@ package steps;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.deveasy.test.core.cloud.CloudMode;
-import org.deveasy.test.core.cloud.CloudProvider;
-import org.deveasy.test.core.cloud.TestCloudConfig;
+import com.enrichmeai.test.core.cloud.CloudMode;
+import com.enrichmeai.test.core.cloud.CloudProvider;
+import com.enrichmeai.test.core.cloud.TestCloudConfig;
 import org.junit.jupiter.api.Test;
 
 public class ConfigStepsTest {
