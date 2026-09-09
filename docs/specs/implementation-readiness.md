@@ -3,7 +3,7 @@ title: enrich-test-api
 type: implementation-readiness
 status: current
 created: '2026-09-06'
-updated: '2026-09-08'
+updated: '2026-09-09'
 sources: ['docs/specs/PRD.md', 'docs/specs/architecture.md', 'docs/specs/epics.md']
 ---
 
@@ -14,8 +14,9 @@ that nothing records?**
 
 ## Verdict: CONCERNS
 
-Partly. Eight of the twenty-nine stories are expanded and can be built today, and one is already
-complete.
+Partly. Eleven of the twenty-nine stories are expanded, and one is already complete. Epic 7's
+three were expanded and implemented in one pass on 2026-09-09; the rest of the expanded set can be
+built today.
 
 The blocking list is shorter than it first looked. The library is unpublished with no consumers, so
 three items previously written up as decisions — the package rename, removing `CloudMode.LIVE`,
@@ -23,8 +24,9 @@ removing `SECRETS` and `KMS` — are not decisions at all. Each was a decision o
 it would break someone, and there is nobody to break. They are free work.
 
 That leaves **three genuine decisions** nobody but the maintainer can settle, and only one item on
-the whole list with a hard deadline. Epic 7's three stories are unblocked work not yet expanded to
-story files; the rest sit downstream of the three decisions.
+the whole list with a hard deadline. Epic 7's three stories were unblocked work; they are now
+expanded and implemented, and their story files raise two questions of their own. The rest sit
+downstream of the three decisions.
 
 This is not a defect in the planning. It is what the planning found. The useful response is to work
 the ready lane and answer the six questions in parallel, not to wait.
@@ -44,6 +46,9 @@ numbers, method names and acceptance criteria written against code that was read
 | 1.6 Cover the remaining test-core classes | Added by this pass, for the same reason as 1.5 |
 | 6.2 Correct the `.gitignore` patterns | Premise re-verified and corrected |
 | 6.3 Remove the inert publishing configuration | All seven items located by line number |
+| 7.1 Track topics and tables | Expanded and implemented 2026-09-09; the story file records the track-after-success rule and why it differs from the two older wrappers |
+| 7.2 Make failed cleanup visible | Expanded and implemented 2026-09-09; raises whether a failed teardown should fail the build |
+| 7.3 Make `ensureTable` reject a table whose schema does not match | Expanded and implemented 2026-09-09; corrects a third wrong premise (`deleteTable` already evicts `KEYS`) and raises recreate-on-mismatch |
 
 ## Decisions required — the blocking list
 

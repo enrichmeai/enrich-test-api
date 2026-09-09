@@ -167,13 +167,17 @@ Nothing here is published to any registry, and this section is what would have t
 first. It is not a roadmap with dates; it is the list of things that are currently wrong or
 undecided, kept honest against the backlog in [epics.md](docs/specs/epics.md).
 
-**Defects that must be fixed.** The library misbehaves in exactly the case it is aimed at:
+**Defects that were fixed.** The library used to misbehave in exactly the case it is aimed at:
 several test classes in one run. The emulator container is shared for the whole JVM, the
-JUnit extension never releases topics or tables, and `ensureTable` returns without checking
-that an existing table's key schema matches the one requested — so a second test class can
-silently inherit the first's table, and the failure surfaces later in `putItem`, which has no
-catch, as a raw SDK `ValidationException`. The test that breaks is not the test that caused
-it. That is Epic 7, and it is the clearest blocker.
+JUnit extension never released topics or tables, and `ensureTable` returned without checking
+that an existing table's key schema matched the one requested — so a second test class could
+silently inherit the first's table, and the failure surfaced later in `putItem`, which has no
+catch, as a raw SDK `ValidationException`. Epic 7 closed all three: the extension now tracks
+and releases every capability's resources, a release that fails is logged with the resource
+name and cause instead of being swallowed, and `ensureTable` fails fast with a message naming
+the table and both schemas. Two questions from that work are still open — whether a failed
+teardown should fail the build, and whether a schema mismatch should recreate the table
+rather than fail — and both are recorded in the Epic 7 story files.
 
 **Free work, cheap now and not later.** Nothing is published and there are no consumers, so
 several things usually treated as breaking changes cost nothing today. Rename the Java packages
