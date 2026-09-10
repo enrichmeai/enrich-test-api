@@ -3,7 +3,7 @@ title: enrich-test-api
 type: epics-and-stories
 status: draft
 created: '2026-09-06'
-updated: '2026-09-08'
+updated: '2026-09-09'
 sources: ['docs/specs/PRD.md', 'docs/specs/architecture.md', 'docs/adr/0006-github-pages-disabled.md']
 ---
 
@@ -521,11 +521,13 @@ partition key, and asserts that failure — not a `ValidationException` from a l
 Whether a mismatch should instead recreate the table is raised as a question, not decided here:
 silently dropping a table is its own footgun.
 
-Minor, and kept from the earlier draft because it is still true: `KEYS` is a `private static final
-Map` that nothing ever evicts. It grows for the life of the JVM, and after a `deleteTable` a
-`getItem` issued without an intervening `ensureTable` reads a stale key name against a table that
-is gone — which returns `null`, indistinguishable from a missing item. Worth clearing in
-`deleteTable` while in the file.
+Minor, and corrected on expansion: the earlier draft kept a claim that `KEYS` is a `private static
+final Map` that nothing ever evicts, so a `getItem` after `deleteTable` reads a stale key name. It
+is not so. `deleteTable` ends with `KEYS.remove(tableName)` and has since the class was introduced,
+so the eviction that sub-point asked for is already there, and the "stale read" it described returns
+`null` with or without it. What survives is only that the map is static and shared between adapter
+instances, which is a design smell rather than a defect and is left alone. This is the third line
+this story has blamed; the story file records all three so the next reader does not re-derive them.
 
 ---
 

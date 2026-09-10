@@ -3,13 +3,36 @@ package org.deveasy.test.core.junit.support;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.deveasy.test.core.cloud.capability.BlobStorage;
 
-/** Very small in-memory BlobStorage used for testing the CloudExtension injection. */
+/** Very small in-memory BlobStorage used for testing the CloudExtension injection and cleanup. */
 public final class FakeBlobStorage implements BlobStorage {
   private final Map<String, Map<String, byte[]>> buckets = new ConcurrentHashMap<>();
+  private final List<String> deleteAttempts = new CopyOnWriteArrayList<>();
+  private final Set<String> failDeletes = ConcurrentHashMap.newKeySet();
+
+  /** Names of the buckets that currently exist. */
+  public Set<String> buckets() {
+    return Collections.unmodifiableSet(buckets.keySet());
+  }
+
+  /** Every bucket name {@link #deleteBucket} was called with, in order, whether or not it threw. */
+  public List<String> deleteAttempts() {
+    return Collections.unmodifiableList(deleteAttempts);
+  }
+
+  /** Makes {@link #deleteBucket} throw for the named bucket, leaving it in place. */
+  public void failDeleteOf(String name) {
+    failDeletes.add(name);
+  }
 
   @Override
   public void ensureBucket(String name) {
@@ -18,6 +41,10 @@ public final class FakeBlobStorage implements BlobStorage {
 
   @Override
   public void deleteBucket(String name) {
+    deleteAttempts.add(name);
+    if (failDeletes.contains(name)) {
+      throw new IllegalStateException("simulated failure deleting bucket '" + name + "'");
+    }
     buckets.remove(name);
   }
 
