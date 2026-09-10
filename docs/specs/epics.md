@@ -233,11 +233,14 @@ and says the mismatch is deliberate.
 
 As a consumer, I can import types whose package matches the coordinates I depend on.
 
-Context: 20 main sources and 12 test sources, plus two `META-INF/services` files whose *names*
-encode the interface's fully qualified name — `test-cloud-aws/src/main/resources/META-INF/services/org.deveasy.test.core.cloud.spi.CloudAdapter`
-and the same path under `test-core/src/test/resources/`. Renaming the package without renaming
-those two files leaves `ServiceLoader` finding nothing, and the failure is a capability that
-silently does not resolve rather than a compile error.
+Context: 20 main sources and 26 test sources, plus two `META-INF/services` files whose *names*
+encode the interface's fully qualified name — now
+`test-cloud-aws/src/main/resources/META-INF/services/com.enrichmeai.test.core.cloud.spi.CloudAdapter`
+and the same path under `test-core/src/test/resources/`, renamed from their `org.deveasy...`
+names with their contents. Renaming the package without renaming those two files would have
+left `ServiceLoader` finding nothing, and the failure is a capability that silently does not
+resolve rather than a compile error; the existing injection and integration tests resolve the
+adapter through the registration file, which is what guards against it.
 
 Acceptance: `mvn -B verify` green with Docker running; both service-registration files renamed;
 `docs/adr/` and `.junie/` guidelines updated; a migration note in the CHANGELOG under a BREAKING
