@@ -3,7 +3,7 @@ title: enrich-test-api
 type: prd
 status: draft
 created: '2026-09-06'
-updated: '2026-09-08'
+updated: '2026-09-09'
 ---
 
 # PRD: enrich-test-api
@@ -35,7 +35,7 @@ It matters because the alternatives are a mock that tests itself, or a live acco
 - Teams that must test against a real cloud account. `CloudMode.LIVE` exists in the enum with no tested path behind it.
 - Teams that cannot run Docker in CI. There is no Docker-free profile.
 - Non-JVM teams. This is a Java 17 library with no wire protocol.
-- Teams wanting to integration-test a framework application against an emulator. The library drives cloud capabilities directly; it does not configure an application under test. No endpoint or credential is reachable from the provider-neutral API — `TestCloudConfig` exposes only provider, mode, region and account, and `CloudAdapter` only the capability getters — so a Spring Boot, Quarkus or Micronaut context cannot be pointed at the emulator without importing `org.deveasy.test.cloud.aws.internal.LocalStackHolder`, which costs the provider neutrality the library exists for. This is the largest practical exclusion on this list. Tracked as Epic 8.
+- Teams wanting to integration-test a framework application against an emulator. The library drives cloud capabilities directly; it does not configure an application under test. No endpoint or credential is reachable from the provider-neutral API — `TestCloudConfig` exposes only provider, mode, region and account, and `CloudAdapter` only the capability getters — so a Spring Boot, Quarkus or Micronaut context cannot be pointed at the emulator without importing `com.enrichmeai.test.cloud.aws.internal.LocalStackHolder`, which costs the provider neutrality the library exists for. This is the largest practical exclusion on this list. Tracked as Epic 8.
 
 ### 2.3 Key User Journeys
 
@@ -113,7 +113,7 @@ A test author can obtain BlobStorage, Queue, PubSub or NoSqlTable and exercise t
 A user can make an adapter available by placing its jar on the test classpath and doing nothing else.
 
 **Consequences (testable):**
-- The AWS adapter registers under `META-INF/services/org.deveasy.test.core.cloud.spi.CloudAdapter`.
+- The AWS adapter registers under `META-INF/services/com.enrichmeai.test.core.cloud.spi.CloudAdapter`.
 - Removing `test-cloud-aws` from the classpath leaves `test-core` compiling and its own tests passing.
 - Requesting a provider with no adapter present yields an explicit failure naming the provider, not a `NoSuchElementException`.
 
@@ -236,7 +236,7 @@ A maintainer can run an OWASP Dependency-Check audit on demand, and a normal bui
 - `SECRETS` and `KMS` capabilities. Deferred; enum values exist as placeholders.
 - Maven Central publishing. Deferred.
 - Reaching line 0.80 and branch 0.70 coverage. Deferred to Epic 1; the gap is large and honest floors are in place meanwhile.
-- Renaming Java packages from `org.deveasy.*` to match the `com.enrichmeai` groupId. `[NOTE FOR PM]` this inconsistency is visible to any consumer reading an import; it is a breaking change across every source file and wants its own decision.
+- ~~Renaming Java packages from `org.deveasy.*` to match the `com.enrichmeai` groupId.~~ Done 2026-09-09 (ADR 0008); the packages now match the groupId.
 
 ## 7. Success Metrics
 
@@ -254,7 +254,7 @@ A maintainer can run an OWASP Dependency-Check audit on demand, and a normal bui
 
 ## 8. Open Questions
 
-1. Do the Java packages move from `org.deveasy.*` to `com.enrichmeai.*`? It is a breaking change and currently inconsistent with the groupId.
+1. ~~Do the Java packages move from `org.deveasy.*` to `com.enrichmeai.*`?~~ **Resolved 2026-09-09:** yes, before the first release; see ADR 0008.
 2. What is the second provider, Azure or GCP? The SPI is unproven until one exists.
 3. Does `CloudMode.LIVE` stay in the enum while unimplemented, or come out until it works? Today it is a promise the code does not keep.
 4. Should `SECRETS` and `KMS` remain in `CloudServiceType` with no interface behind them?

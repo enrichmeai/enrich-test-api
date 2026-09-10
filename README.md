@@ -23,8 +23,9 @@ Status: early-stage private alpha. AWS is the only provider, and only in emulato
 | version | `0.3.0-alpha1-private.1` |
 | modules | `test-core`, `test-cloud-aws`, `test-feature` |
 
-The Java packages are still `org.deveasy.*`. Renaming them is a breaking API change
-across every source file and is deliberately not part of the coordinate rebrand.
+The Java packages are `com.enrichmeai.*`, matching the groupId. They were `org.deveasy.*`
+until 2026-09-09; the rename is free while nothing is published and permanent afterwards, which
+is why it landed before the first release. See [ADR 0008](docs/adr/0008-move-the-java-packages-to-com-enrichmeai.md).
 
 
 ## Project structure (modules)
@@ -36,10 +37,10 @@ across every source file and is deliberately not part of the coordinate rebrand.
 | `test-feature` | Provider-neutral Cucumber glue and JUnit Platform suites. No main sources; everything lives under `src/test`. |
 
 Key directories:
-- `test-core/src/main/java/org/deveasy/test/core/cloud/` core API, config, capabilities
-- `test-feature/src/test/java/org/deveasy/test/feature/cloud/` Cucumber glue, suites, scenario state
+- `test-core/src/main/java/com/enrichmeai/test/core/cloud/` core API, config, capabilities
+- `test-feature/src/test/java/com/enrichmeai/test/feature/cloud/` Cucumber glue, suites, scenario state
 - `test-feature/src/test/resources/features/` provider-neutral feature files
-- `test-cloud-aws/src/main/java/org/deveasy/test/cloud/aws/` AWS adapter and client wiring
+- `test-cloud-aws/src/main/java/com/enrichmeai/test/cloud/aws/` AWS adapter and client wiring
 - `docs/adr/` architecture decision records
 
 
@@ -47,7 +48,7 @@ Key directories:
 
 Capability interfaces live in `test-core`: `BlobStorage`, `Queue`, `PubSub`, `NoSqlTable`. Runtime configuration is a single immutable `TestCloudConfig` carrying provider, mode, region and overrides.
 
-Adapters are discovered with `java.util.ServiceLoader`. An adapter implements `org.deveasy.test.core.cloud.spi.CloudAdapter` and registers under `META-INF/services/`. Putting `test-cloud-aws` on the classpath is enough for the AWS adapter to be found. See [ADR 0001](docs/adr/0001-use-service-provider-interface.md).
+Adapters are discovered with `java.util.ServiceLoader`. An adapter implements `com.enrichmeai.test.core.cloud.spi.CloudAdapter` and registers under `META-INF/services/`. Putting `test-cloud-aws` on the classpath is enough for the AWS adapter to be found. See [ADR 0001](docs/adr/0001-use-service-provider-interface.md).
 
 Emulators come first. The AWS adapter starts a LocalStack container through Testcontainers, so a test run needs Docker but no cloud credentials. See [ADR 0002](docs/adr/0002-emulator-first-testing.md).
 
@@ -180,12 +181,12 @@ teardown should fail the build, and whether a schema mismatch should recreate th
 rather than fail — and both are recorded in the Epic 7 story files.
 
 **Free work, cheap now and not later.** Nothing is published and there are no consumers, so
-several things usually treated as breaking changes cost nothing today. Rename the Java packages
-from `org.deveasy.*` to match the `com.enrichmeai` coordinates (Story 2.1) — an afternoon now,
-and permanent after publication, since no later change rescues a consumer's `import` statements.
-Take `CloudMode.LIVE` out until it works (Story 4.1) and drop `SECRETS` and `KMS` from
-`CloudServiceType` (Story 6.4); both are declared but unimplemented, and removing them breaks
-nobody.
+several things usually treated as breaking changes cost nothing today. The Java packages now
+match the `com.enrichmeai` coordinates (Story 2.2, [ADR 0008](docs/adr/0008-move-the-java-packages-to-com-enrichmeai.md)),
+which was the one item with a hard deadline: permanent after publication, since no later change
+rescues a consumer's `import` statements. Still open: take `CloudMode.LIVE` out until it works
+(Story 4.1) and drop `SECRETS` and `KMS` from `CloudServiceType` (Story 6.4); both are declared
+but unimplemented, and removing them breaks nobody.
 
 **Housekeeping.** The version is `0.3.0-alpha1-private.1`, which cannot go to a public
 registry as it stands, and the POM still carries OSSRH publishing configuration pointing at a

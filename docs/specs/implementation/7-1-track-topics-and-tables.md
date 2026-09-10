@@ -29,12 +29,12 @@ Line numbers are against `ef907e1`, the commit this story was expanded from.
 
 | Path | Role |
 |---|---|
-| `test-core/src/main/java/org/deveasy/test/core/junit/CloudExtension.java` | Under change. `beforeAll` :80–89 stores `PubSub` and `NoSqlTable` unwrapped; the tracking sets for topics and tables are already created at :66–67 and never read. `afterAll` :97–121 releases buckets and queues only; the comment at :120 defers the rest. The two existing wrappers are `TrackingBlobStorage` :181–231 and `TrackingQueue` :233–268. |
-| `test-core/src/test/java/org/deveasy/test/core/junit/support/FakeCloudAdapter.java` | Returns `null` for `Queue`, `PubSub` and `NoSqlTable` at :34–47 and a fresh `FakeBlobStorage` on every call at :31. To assert on state after `afterAll`, the test needs a handle on the same instance the extension used, so the fake must hand out shared, resettable instances. |
-| `test-core/src/test/java/org/deveasy/test/core/junit/support/FakeQueue.java`, `FakePubSub.java`, `FakeNoSqlTable.java` | New. In-memory fakes with just enough behaviour to be asserted against: what exists, and which deletes were attempted. |
-| `test-core/src/test/java/org/deveasy/test/core/junit/CloudExtensionCleanupTest.java` | New. Runs fixture classes through the JUnit Platform `Launcher` so that `afterAll` has actually run by the time the assertions execute. |
+| `test-core/src/main/java/com/enrichmeai/test/core/junit/CloudExtension.java` | Under change. `beforeAll` :80–89 stores `PubSub` and `NoSqlTable` unwrapped; the tracking sets for topics and tables are already created at :66–67 and never read. `afterAll` :97–121 releases buckets and queues only; the comment at :120 defers the rest. The two existing wrappers are `TrackingBlobStorage` :181–231 and `TrackingQueue` :233–268. |
+| `test-core/src/test/java/com/enrichmeai/test/core/junit/support/FakeCloudAdapter.java` | Returns `null` for `Queue`, `PubSub` and `NoSqlTable` at :34–47 and a fresh `FakeBlobStorage` on every call at :31. To assert on state after `afterAll`, the test needs a handle on the same instance the extension used, so the fake must hand out shared, resettable instances. |
+| `test-core/src/test/java/com/enrichmeai/test/core/junit/support/FakeQueue.java`, `FakePubSub.java`, `FakeNoSqlTable.java` | New. In-memory fakes with just enough behaviour to be asserted against: what exists, and which deletes were attempted. |
+| `test-core/src/test/java/com/enrichmeai/test/core/junit/CloudExtensionCleanupTest.java` | New. Runs fixture classes through the JUnit Platform `Launcher` so that `afterAll` has actually run by the time the assertions execute. |
 | `test-core/pom.xml` | Gains `junit-platform-launcher` at `test` scope. Its version comes from the imported `junit-bom` (AD-7). Test scope keeps AD-1 intact: the module's only non-test dependency stays `junit-jupiter-api` at `provided`. |
-| `test-cloud-aws/src/test/java/org/deveasy/test/cloud/aws/CloudExtensionMultiClassIT.java` | New. The end-to-end version of the acceptance test, against LocalStack, named `*IT` so Failsafe runs it. |
+| `test-cloud-aws/src/test/java/com/enrichmeai/test/cloud/aws/CloudExtensionMultiClassIT.java` | New. The end-to-end version of the acceptance test, against LocalStack, named `*IT` so Failsafe runs it. |
 | `test-cloud-aws/pom.xml` | Same `junit-platform-launcher` test dependency. |
 
 **Naming is load-bearing.** Surefire runs `*Test`; Failsafe runs `*IT`, `IT*`, `*ITCase` and

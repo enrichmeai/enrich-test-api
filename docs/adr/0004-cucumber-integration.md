@@ -7,9 +7,9 @@ Status: Accepted
 We want executable specifications that are readable by QA/Dev and reusable across cloud providers. The suite should be provider‑neutral and discover provider adapters via SPI at runtime. Tests need to run under JUnit Platform and integrate with IDEs and CI.
 
 ## Decision
-Adopt Cucumber running on JUnit Platform. Place `.feature` files under `test-feature/src/test/resources/features/` and glue in `org.deveasy.test.feature.cloud`. Provide a JUnit Platform suite (`CucumberQueueSuite`, etc.) that:
+Adopt Cucumber running on JUnit Platform. Place `.feature` files under `test-feature/src/test/resources/features/` and glue in `com.enrichmeai.test.feature.cloud`. Provide a JUnit Platform suite (`CucumberQueueSuite`, etc.) that:
 - Scans classpath resource path `features`.
-- Uses glue package `org.deveasy.test.feature.cloud`.
+- Uses glue package `com.enrichmeai.test.feature.cloud`.
 - Discovers provider implementations via Java `ServiceLoader` of `CloudAdapter` brought onto the test classpath by adding the provider module (e.g., `test-cloud-aws`) as a test‑scope dependency of `test-feature`.
 
 Selection and configuration:

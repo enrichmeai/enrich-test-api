@@ -31,7 +31,7 @@ branches.
 
 ## Files
 
-All under `test-cloud-aws/src/main/java/org/deveasy/test/cloud/aws/`, with existing integration
+All under `test-cloud-aws/src/main/java/com/enrichmeai/test/cloud/aws/`, with existing integration
 tests beside each: `AwsBlobStorageIT`, `AwsPubSubIT`, `AwsQueueIT`. Extend those or add `*IT`
 siblings — Failsafe includes `*IT`, Surefire will not start a container.
 

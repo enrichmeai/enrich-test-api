@@ -21,10 +21,10 @@ Optional environment variables commonly used with Testcontainers (set only if ne
 - test-cloud-aws: AWS adapter (SDK v2 + LocalStack/Testcontainers). Implements minimal S3 (BlobStorage) and SQS (Queue). SNS wiring present for future Pub/Sub.
 
 Key dirs:
-- test-core/src/main/java/org/deveasy/test/core/cloud/** — core API and SPI
-- test-feature/src/test/java/org/deveasy/test/feature/cloud/** — Cucumber glue and JUnit Platform suite(s)
+- test-core/src/main/java/com/enrichmeai/test/core/cloud/** — core API and SPI
+- test-feature/src/test/java/com/enrichmeai/test/feature/cloud/** — Cucumber glue and JUnit Platform suite(s)
 - test-feature/src/test/resources/features/** — provider‑neutral features
-- test-cloud-aws/src/main/java/org/deveasy/test/cloud/aws/** — AWS adapter + LocalStack client wiring
+- test-cloud-aws/src/main/java/com/enrichmeai/test/cloud/aws/** — AWS adapter + LocalStack client wiring
 
 
 ## Build and verification
@@ -55,15 +55,15 @@ There are two types of tests in this repo.
 - Execute in a specific module only (avoids starting Docker for others):
   mvn -pl test-cloud-aws -am -DskipTests=false test
 - Execute specific test class:
-  mvn -pl test-cloud-aws -Dtest=org.deveasy.test.cloud.aws.AwsBlobStorageIT test
+  mvn -pl test-cloud-aws -Dtest=com.enrichmeai.test.cloud.aws.AwsBlobStorageIT test
 
 2) Cucumber features via JUnit Platform (module: test-feature)
-- The suite org.deveasy.test.feature.cloud.CucumberQueueSuite looks on classpath resource path "features" and uses glue package org.deveasy.test.feature.cloud.
+- The suite com.enrichmeai.test.feature.cloud.CucumberQueueSuite looks on classpath resource path "features" and uses glue package com.enrichmeai.test.feature.cloud.
 - To run only the feature suite module (and bring AWS adapter on test classpath):
   mvn -pl test-feature -am -DskipTests=false test
 
 Provider adapter discovery
-- Adapters implement org.deveasy.test.core.cloud.spi.CloudAdapter and are discovered via Java ServiceLoader. The AWS adapter is present when you include the test-cloud-aws module on the test classpath. In test-feature/pom.xml this is already declared with scope test and excludes test-core to avoid duplicate classes.
+- Adapters implement com.enrichmeai.test.core.cloud.spi.CloudAdapter and are discovered via Java ServiceLoader. The AWS adapter is present when you include the test-cloud-aws module on the test classpath. In test-feature/pom.xml this is already declared with scope test and excludes test-core to avoid duplicate classes.
 
 Testcontainers/LocalStack
 - CloudMode.EMULATOR uses LocalStack via Testcontainers. Ensure Docker is up; otherwise features/ITs that touch AWS S3/SQS will fail or hang.
@@ -79,7 +79,7 @@ Testcontainers/LocalStack
 
 - Cucumber features (provider-neutral):
   - Put .feature files under test-feature/src/test/resources/features/.
-  - Implement glue in org.deveasy.test.feature.cloud (or a subpackage) so the existing @Cucumber suite picks it up.
+  - Implement glue in com.enrichmeai.test.feature.cloud (or a subpackage) so the existing @Cucumber suite picks it up.
   - If the feature uses cloud capabilities, ensure the corresponding provider adapter (e.g., test-cloud-aws) is on the test classpath of test-feature. This is already configured; adding another provider module will require a similar test-scope dependency.
   - You can parameterize provider/mode/region in scenarios using the selection steps in CloudSelectionSteps.
 
@@ -90,7 +90,7 @@ This is a minimal, non-Docker example you can use when validating your environme
 - Create a trivial JUnit 4 or 5 test in any module that already has the respective test engine on classpath. For a quick check without Docker involvement, prefer test-core with JUnit 4.
 
 Example (JUnit 4 in test-core):
-- File: test-core/src/test/java/org/deveasy/test/core/CoreSmokeTest.java
+- File: test-core/src/test/java/com/enrichmeai/test/core/CoreSmokeTest.java
   public class CoreSmokeTest {
       @org.junit.Test
       public void addsTwoNumbers() {
@@ -100,7 +100,7 @@ Example (JUnit 4 in test-core):
 
 Run only this test to avoid pulling/starting Docker:
 - Using Maven module targeting:
-  mvn -pl test-core -DskipTests=false -Dtest=org.deveasy.test.core.CoreSmokeTest test
+  mvn -pl test-core -DskipTests=false -Dtest=com.enrichmeai.test.core.CoreSmokeTest test
 
 Clean up afterwards by deleting the temporary test file.
 
@@ -108,8 +108,8 @@ Note: We validated this workflow locally during documentation authoring by runni
 
 
 ## Adding a new cloud provider adapter
-- Implement org.deveasy.test.core.cloud.spi.CloudAdapter and the capability interfaces you support.
-- Wire Java ServiceLoader: create META-INF/services/org.deveasy.test.core.cloud.spi.CloudAdapter with the fully qualified class name of your adapter.
+- Implement com.enrichmeai.test.core.cloud.spi.CloudAdapter and the capability interfaces you support.
+- Wire Java ServiceLoader: create META-INF/services/com.enrichmeai.test.core.cloud.spi.CloudAdapter with the fully qualified class name of your adapter.
 - For emulator-first strategy, add Testcontainers setup for the provider’s local emulators (or official ones) and expose client builders in an internal helper like test-cloud-aws/internal/AwsClients.
 - Keep vendor SDK dependencies confined to the provider module.
 

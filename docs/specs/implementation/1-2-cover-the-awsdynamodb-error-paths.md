@@ -23,8 +23,8 @@ of that number on its own.
 
 | Path | Role |
 |---|---|
-| `test-cloud-aws/src/main/java/org/deveasy/test/cloud/aws/AwsDynamoDB.java` | Under test. Do not modify in this story. |
-| `test-cloud-aws/src/test/java/org/deveasy/test/cloud/aws/AwsDynamoDbIT.java` | The existing integration test. Extend it, or add siblings following the `*IT` naming that Failsafe includes. |
+| `test-cloud-aws/src/main/java/com/enrichmeai/test/cloud/aws/AwsDynamoDB.java` | Under test. Do not modify in this story. |
+| `test-cloud-aws/src/test/java/com/enrichmeai/test/cloud/aws/AwsDynamoDbIT.java` | The existing integration test. Extend it, or add siblings following the `*IT` naming that Failsafe includes. |
 
 **Naming is load-bearing.** Surefire runs `*Test`, Failsafe runs `*IT`, `IT*`, `*ITCase` and
 `*Suite`. A new class named `AwsDynamoDbErrorTest` runs under Surefire with no container and will

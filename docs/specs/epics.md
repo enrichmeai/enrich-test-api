@@ -104,7 +104,7 @@ moves.
 As a maintainer, I can rely on the JUnit extension's branches being tested, so that
 capability injection failures surface in CI rather than in a user's project.
 
-Context: `test-core/src/main/java/org/deveasy/test/core/junit/CloudExtension.java`, 52 of 82
+Context: `test-core/src/main/java/com/enrichmeai/test/core/junit/CloudExtension.java`, 52 of 82
 lines and 12 of 42 branches covered, plus the two nested tracking types at 13 of 19 and 0 of
 14 lines. It is the single largest gap in test-core and holds 30 of the module's 32
 uncovered branches.
@@ -124,7 +124,7 @@ Expanded: `docs/specs/implementation/1-1-cover-cloudextension.md`.
 As a maintainer, I can rely on the adapter's error handling being tested, so that the way it
 degrades under a provider error is a known, asserted property rather than an assumption.
 
-Context: `test-cloud-aws/src/main/java/org/deveasy/test/cloud/aws/AwsDynamoDB.java`, 107 of
+Context: `test-cloud-aws/src/main/java/com/enrichmeai/test/cloud/aws/AwsDynamoDB.java`, 107 of
 193 lines and 43 of 130 branches covered. It holds 87 of the module's 147 uncovered branches,
 more than every other class combined. Error handling dominates the uncovered half.
 
@@ -214,9 +214,12 @@ is an afternoon. The only thing that makes this urgent is that publishing makes 
 **Done when:** the packages match the groupId — or, if they are deliberately kept, a written record
 says why, which after a release becomes the only available answer.
 
+**Done 2026-09-09.** ADR 0008 records the decision (Story 2.1) and the rename landed with it
+(Story 2.2), ahead of the first Maven Central release that made the deadline real.
+
 ### Story 2.1: Decide whether the packages move
 
-**Decision required. Blocked on the maintainer.**
+**Decided 2026-09-09: the packages move. See `docs/adr/0008-move-the-java-packages-to-com-enrichmeai.md`.**
 
 As a maintainer, I can point to a recorded decision rather than re-litigating it.
 
@@ -226,15 +229,18 @@ and says the mismatch is deliberate.
 
 ### Story 2.2: Execute the rename
 
-**Blocked on Story 2.1.**
+**Executed 2026-09-09, with Story 2.1.**
 
 As a consumer, I can import types whose package matches the coordinates I depend on.
 
-Context: 20 main sources and 12 test sources, plus two `META-INF/services` files whose *names*
-encode the interface's fully qualified name — `test-cloud-aws/src/main/resources/META-INF/services/org.deveasy.test.core.cloud.spi.CloudAdapter`
-and the same path under `test-core/src/test/resources/`. Renaming the package without renaming
-those two files leaves `ServiceLoader` finding nothing, and the failure is a capability that
-silently does not resolve rather than a compile error.
+Context: 20 main sources and 26 test sources, plus two `META-INF/services` files whose *names*
+encode the interface's fully qualified name — now
+`test-cloud-aws/src/main/resources/META-INF/services/com.enrichmeai.test.core.cloud.spi.CloudAdapter`
+and the same path under `test-core/src/test/resources/`, renamed from their `org.deveasy...`
+names with their contents. Renaming the package without renaming those two files would have
+left `ServiceLoader` finding nothing, and the failure is a capability that silently does not
+resolve rather than a compile error; the existing injection and integration tests resolve the
+adapter through the registration file, which is what guards against it.
 
 Acceptance: `mvn -B verify` green with Docker running; both service-registration files renamed;
 `docs/adr/` and `.junie/` guidelines updated; a migration note in the CHANGELOG under a BREAKING
@@ -548,7 +554,7 @@ Verified against the code rather than assumed:
 - No `springframework`, `quarkus`, `micronaut`, `jakarta` or `javax.inject` reference exists
   anywhere in the sources or POMs.
 
-The only route to an endpoint is `org.deveasy.test.cloud.aws.internal.LocalStackHolder.get()`,
+The only route to an endpoint is `com.enrichmeai.test.cloud.aws.internal.LocalStackHolder.get()`,
 which returns a Testcontainers `LocalStackContainer`. Reaching it costs a consumer three things at
 once: a dependency on a package named `internal` with no stability promise, a direct dependency on
 `test-cloud-aws` rather than the core, and Testcontainers types in their test code. The third
