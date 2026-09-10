@@ -177,7 +177,7 @@ this is the operator's view.
 3. Create a signing key, publish its public half, and store the private half:
 
    ```sh
-   gpg --quick-gen-key "enrichmeai release <joseph.a.aruja@gmail.com>" rsa4096 sign 2y
+   gpg --quick-gen-key "enrichmeai release <release@your-domain>" rsa4096 sign 2y
    gpg --list-keys --keyid-format long          # note the key id
    gpg --keyserver keyserver.ubuntu.com --send-keys <key id>
    gpg --armor --export-secret-keys <key id> | gh secret set GPG_PRIVATE_KEY

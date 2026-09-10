@@ -50,10 +50,13 @@ Publish on `central.sonatype.com`. Once the flow has been seen to work end to en
 
 **What is published:** the parent POM `com.enrichmeai:enrich-test-api`, `test-core` and
 `test-cloud-aws`. **What is not:** `test-feature`, excluded from the release reactor with
-`-pl '!test-feature'`. The exclusion is on the command line rather than through the plugin's
-`skipPublishing` parameter because that parameter is undocumented and `test-feature` is the last
-module in the reactor, which is the module the plugin uses to upload; skipping it could skip the
-upload.
+`-pl '!test-feature'`. It has no main sources, so it cannot produce the sources and javadoc jars
+Central requires of every published jar, and there is nothing in it to publish. The exclusion is
+on the command line rather than through the plugin's `skipPublishing` parameter for a second
+reason: the reactor builds `test-feature` last, because it depends on both other modules
+(regardless of the order in `<modules>`, which lists it second), and the plugin uploads from the
+last module it runs in. `skipPublishing` is undocumented, and skipping the last module could skip
+the upload. Leaving it out of the reactor makes `test-cloud-aws` last, and that one is published.
 
 **The first version is `0.3.0-alpha1`.** The `-alpha1` qualifier is the honest description above,
 and it lets the enum removals in Stories 4.1 and 6.4 land in a later alpha without pretending

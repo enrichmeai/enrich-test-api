@@ -80,7 +80,9 @@
 
     <!--
       No distributionManagement: releases go to the Sonatype Central Portal through the
-      central-publishing-maven-plugin in the `release` profile below, which needs none.
+      central-publishing-maven-plugin in the `release` profile below, which takes its target
+      from configuration and needs no distributionManagement section. It still needs a Portal
+      token and a signing key, which arrive through settings.xml and the environment.
       The old OSSRH entries pointed at oss.sonatype.org, decommissioned in 2025. See ADR 0009.
     -->
 

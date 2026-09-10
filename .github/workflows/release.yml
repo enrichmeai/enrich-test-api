@@ -92,8 +92,10 @@ jobs:
           -DnewVersion="${{ steps.version.outputs.version }}"
           -DgenerateBackupPoms=false
 
-      # test-feature has no main sources and is not published; excluding it from the reactor
-      # keeps the last module in the reactor a published one, which is the module that uploads.
+      # test-feature has no main sources, so it cannot carry the sources and javadoc jars Central
+      # requires, and it is not published. It is also last in the reactor's build order (it depends
+      # on both other modules, whatever the order in <modules>), and the plugin uploads from the
+      # last module it runs in; excluding it keeps that module a published one.
       - name: Build, sign and upload the bundle
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
