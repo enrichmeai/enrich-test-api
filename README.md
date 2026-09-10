@@ -20,7 +20,7 @@ Status: early-stage private alpha. AWS is the only provider, and only in emulato
 | --- | --- |
 | groupId | `com.enrichmeai` |
 | artifactId | `enrich-test-api` (parent) |
-| version | `0.3.0-alpha1-private.1` |
+| version | `0.3.0-alpha1-SNAPSHOT` on `main`; the first release will be `0.3.0-alpha1` |
 | modules | `test-core`, `test-cloud-aws`, `test-feature` |
 
 The Java packages are `com.enrichmeai.*`, matching the groupId. They were `org.deveasy.*`
@@ -160,6 +160,52 @@ work. Only the package rename has a deadline, since publishing makes it permanen
 
 The specs describe the tree as it is, with gaps named as gaps. Architecture decision
 records remain in `docs/adr/`.
+
+
+## Releasing
+
+Releases go to Maven Central through the Sonatype Central Portal, from a tag, on JDK 17.
+The mechanics are recorded in [ADR 0009](docs/adr/0009-release-to-maven-central-through-the-central-portal.md);
+this is the operator's view.
+
+**Once, before the first release** — none of this can be done from the repository:
+
+1. Verify the `com.enrichmeai` namespace on [central.sonatype.com](https://central.sonatype.com)
+   (a TXT record on `enrichmeai.com`).
+2. Generate a Portal **user token** and store it as the repository secrets
+   `MAVEN_CENTRAL_USERNAME` and `MAVEN_CENTRAL_PASSWORD`.
+3. Create a signing key, publish its public half, and store the private half:
+
+   ```sh
+   gpg --quick-gen-key "enrichmeai release <release@your-domain>" rsa4096 sign 2y
+   gpg --list-keys --keyid-format long          # note the key id
+   gpg --keyserver keyserver.ubuntu.com --send-keys <key id>
+   gpg --armor --export-secret-keys <key id> | gh secret set GPG_PRIVATE_KEY
+   gh secret set GPG_PASSPHRASE                  # the passphrase you chose
+   ```
+
+**Every release:**
+
+```sh
+git tag v0.3.0-alpha1 <commit that is green on build and quality-gates>
+git push origin v0.3.0-alpha1
+```
+
+The `release` workflow builds on Temurin 17, runs the full verify including the LocalStack
+tests, signs everything, uploads the bundle for `enrich-test-api`, `test-core` and
+`test-cloud-aws` (not `test-feature`, which has no main sources), and creates a GitHub
+release. The Portal validates the bundle and holds it: **publishing is a manual click on
+central.sonatype.com** while `autoPublish` is `false` in the root POM. A plain `mvn -B verify`
+never activates the `release` profile and needs none of the secrets.
+
+To rehearse locally without uploading anything, run the profile up to signing with a
+throwaway key:
+
+```sh
+export JAVA_HOME=<a JDK 17>
+MAVEN_GPG_PASSPHRASE=<your key's passphrase> mvn -B -Prelease -pl '!test-feature' verify
+ls test-core/target/*.asc
+```
 
 
 ## Before a public release

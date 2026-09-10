@@ -216,7 +216,7 @@ A maintainer can run an OWASP Dependency-Check audit on demand, and a normal bui
 - This is not a cloud abstraction layer for production code. The capabilities are shaped for tests; they expose no retry, pagination or credential strategy.
 - This is not a full cloud API surface. The capabilities are deliberately small.
 - This does not manage cloud credentials or infrastructure. `LIVE` mode is unimplemented in practice.
-- This is not published to Maven Central, and packaging for Central is out of scope.
+- ~~This is not published to Maven Central, and packaging for Central is out of scope.~~ Reversed 2026-09-09: the maintainer asked for a first release; the path is recorded in ADR 0009.
 
 ## 6. MVP Scope
 
@@ -234,7 +234,7 @@ A maintainer can run an OWASP Dependency-Check audit on demand, and a normal bui
 - Azure and GCP adapters. Deferred to v0.5 and v0.6; the SPI is designed for them but nothing validates it with a second implementation.
 - `CloudMode.LIVE`. Deferred; needs a credential story and a cost story.
 - `SECRETS` and `KMS` capabilities. Deferred; enum values exist as placeholders.
-- Maven Central publishing. Deferred.
+- ~~Maven Central publishing. Deferred.~~ In scope since 2026-09-09; see ADR 0009.
 - Reaching line 0.80 and branch 0.70 coverage. Deferred to Epic 1; the gap is large and honest floors are in place meanwhile.
 - ~~Renaming Java packages from `org.deveasy.*` to match the `com.enrichmeai` groupId.~~ Done 2026-09-09 (ADR 0008); the packages now match the groupId.
 

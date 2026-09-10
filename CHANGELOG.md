@@ -11,6 +11,20 @@
   are renamed with their contents, so an adapter registered under the old file name is
   no longer found. Nobody consumes the library yet, which is why this is free now and
   why it had to land before the first release. See ADR 0008.
+- **Releases go to Maven Central through the Central Portal.** A `release` profile
+  attaches sources and javadoc, signs with GPG and uploads with
+  `central-publishing-maven-plugin`; `.github/workflows/release.yml` runs it on JDK 17
+  when a `v*` tag is pushed and creates a GitHub release. `test-feature` is not
+  published. Publishing is a manual step on central.sonatype.com. See ADR 0009.
+- The version on `main` is `0.3.0-alpha1-SNAPSHOT`; the tag sets the released version.
+
+### Removed
+- The inert OSSRH publishing configuration (Story 6.3, replaced rather than deleted):
+  the `oss.sonatype.org` plugin repository, `distributionManagement`, both
+  `nexus-staging-maven-plugin` declarations, the `wagon-ssh` extension, the
+  `sign-source-javadoc` profile (folded into `release`), and `maven-release-plugin`,
+  which referenced a `release` profile that did not exist. Nothing ran `deploy`
+  against any of it, and OSSRH itself was decommissioned in 2025.
 
 ### Fixed
 - The build compiles again. The 2018 legacy step definitions in `test-feature/src/main`

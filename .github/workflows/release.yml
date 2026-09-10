@@ -1,0 +1,124 @@
+name: release
+
+# Publishes a tagged commit to the Sonatype Central Portal. See ADR 0009.
+#
+# Trigger by pushing a tag `vX.Y.Z` or `vX.Y.Z-qualifier` (for example v0.3.0-alpha1) on a
+# commit that is already green on the `build` and `quality-gates` workflows. The manual trigger
+# exists for a retry of the same version after a Portal-side failure; it publishes the branch or
+# tag it is run on, under the version typed in.
+#
+# The build runs on JDK 17 to match the release target (ADR 0007). It is the full lifecycle:
+# unit tests, the LocalStack integration tests, Spotless, Checkstyle, Enforcer and the JaCoCo
+# floors all run before anything is signed or uploaded.
+#
+# Required repository secrets, none of which exist until the maintainer creates them:
+#   MAVEN_CENTRAL_USERNAME / MAVEN_CENTRAL_PASSWORD  a Portal user token (not the account login)
+#   GPG_PRIVATE_KEY                                   ASCII-armoured private key whose public half
+#                                                     is on keyserver.ubuntu.com
+#   GPG_PASSPHRASE                                    its passphrase
+#
+# The Portal validates the bundle and holds it. Publishing is a manual step on
+# central.sonatype.com while `autoPublish` is false in the root POM.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish, without the leading v (for example 0.3.0-alpha1)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish to the Central Portal (JDK 17)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve the release version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="${{ inputs.version }}"
+          fi
+          if ! echo "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "::error::'$version' is not a release version (expected X.Y.Z or X.Y.Z-qualifier)"
+            exit 1
+          fi
+          # A SNAPSHOT version sends the plugin down its snapshot path, which uploads straight to
+          # the Portal's snapshot repository instead of building a bundle. Never do that from here.
+          case "$version" in
+            *SNAPSHOT*) echo "::error::'$version' is a snapshot; releases are tagged versions only"; exit 1 ;;
+          esac
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          case "$version" in
+            *-*) echo "prerelease=true" >> "$GITHUB_OUTPUT" ;;
+            *)   echo "prerelease=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      # setup-java writes ~/.m2/settings.xml with a `central` server whose credentials are read
+      # from the named environment variables at build time, and imports the GPG key.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: 'maven'
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
+      - name: Docker info (debug)
+        run: docker version
+
+      # main carries a -SNAPSHOT version; the tag is the source of truth for what is released.
+      - name: Set the version from the tag
+        run: >
+          mvn -B -q org.codehaus.mojo:versions-maven-plugin:2.18.0:set
+          -DnewVersion="${{ steps.version.outputs.version }}"
+          -DgenerateBackupPoms=false
+
+      # test-feature has no main sources, so it cannot carry the sources and javadoc jars Central
+      # requires, and it is not published. It is also last in the reactor's build order (it depends
+      # on both other modules, whatever the order in <modules>), and the plugin uploads from the
+      # last module it runs in; excluding it keeps that module a published one.
+      - name: Build, sign and upload the bundle
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: mvn -B -Prelease -pl '!test-feature' deploy
+
+      - name: Upload the signed artifacts as a workflow artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ steps.version.outputs.version }}
+          path: |
+            test-core/target/*.jar
+            test-core/target/*.asc
+            test-cloud-aws/target/*.jar
+            test-cloud-aws/target/*.asc
+
+      - name: Create the GitHub release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags="--generate-notes"
+          if [ "${{ steps.version.outputs.prerelease }}" = "true" ]; then flags="$flags --prerelease"; fi
+          gh release create "$GITHUB_REF_NAME" --title "${{ steps.version.outputs.version }}" $flags

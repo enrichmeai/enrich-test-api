@@ -214,4 +214,4 @@ sequenceDiagram
 - **Java package rename.** Done 2026-09-09, see `docs/adr/0008-move-the-java-packages-to-com-enrichmeai.md`; the packages now match the groupId.
 - **SECRETS and KMS capabilities.** Declared in `CloudServiceType`, no interface behind them.
 - **Parallel test execution.** AD-5 gives one shared container; whether capabilities are safe under concurrent tests is untested and unspecified.
-- **Maven Central publishing.** The POM still carries OSSRH `distributionManagement` and a nexus-staging plugin, which are inert and unverified.
+- **Maven Central publishing.** Decided 2026-09-09: through the Central Portal, from a tag, on JDK 17, see `docs/adr/0009-release-to-maven-central-through-the-central-portal.md`. The inert OSSRH configuration is gone.

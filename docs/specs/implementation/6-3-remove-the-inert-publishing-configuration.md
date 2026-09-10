@@ -1,12 +1,20 @@
 ---
 title: 'Story 6.3: Remove the inert publishing configuration'
 epic: 6
-status: ready-for-dev
+status: review
 created: '2026-09-06'
 source: docs/specs/epics.md
 ---
 
 # Story 6.3: Remove the inert publishing configuration
+
+> **Scope changed on 2026-09-09.** This story was written while publishing was out of scope, so
+> its answer was deletion only. The maintainer then asked for a first Maven Central release, and
+> the same seven items were **replaced** rather than removed: see
+> `docs/adr/0009-release-to-maven-central-through-the-central-portal.md`. AC-1 is met in the
+> "retained with a reason" sense for the `sign-source-javadoc` profile (folded into a real
+> `release` profile) and in the "removed" sense for the other six; AC-2 to AC-5 were run as
+> written. The "deletion only" line in the definition of done no longer applies.
 
 ## Story
 
