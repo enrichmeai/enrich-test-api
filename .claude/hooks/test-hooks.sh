@@ -40,6 +40,11 @@ ask|git checkout -- .
 ask|git tag v0.3.0
 ask|git tag -d v0.1.0
 ask|git tag -a java-0.3.0 -m x
+# --- DCO: only a person signs off ---
+ask|git commit -s -m "feat: x"
+ask|git commit -sm "feat: x"
+ask|git commit --signoff -m x
+ask|git rebase --signoff origin/main
 # --- deletes ---
 ask|rm -rf build
 ask|rm -fr /tmp/x
@@ -79,6 +84,7 @@ pass|grep -rn "awsRegion" test-cloud-aws
 pass|git push
 pass|git push origin feature-main-thing
 pass|git status
+pass|git commit -S -m "gpg-signed, not a DCO sign-off"
 pass|git tag
 pass|git tag -l
 pass|git tag --list 'v*'

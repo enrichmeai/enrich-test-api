@@ -59,7 +59,15 @@ convergence) and the per-module JaCoCo floors. Never lower a floor or skip a gat
   touches. It blocks the stop once. Opt out with `CLAUDE_SKIP_STOP_COMPILE=1`.
 - **Before a Bash command:** `guard-destructive.sh` asks before force pushes, pushes to `main`, tags (a `v*`
   tag releases), `mvn deploy` or `-Prelease`, the `aws` / `gcloud` CLIs (this library is emulator-only),
-  `gh pr merge|release|workflow`, `reset --hard`, `clean -f` and recursive `rm`. Cases pinned in `test-hooks.sh`.
+  `gh pr merge|release|workflow`, `reset --hard`, `clean -f`, recursive `rm`, and `git commit -s` /
+  `--signoff` (a DCO sign-off is a person's, never Claude's). Cases pinned in `test-hooks.sh`.
+
+**Releases are batched (Joseph, 2026-09-26).** Features merge into `main` one PR at a time. A release
+happens only once a chunk of features is done: the `wave:W1` set on the Release board. No PR changes
+the version, tags or publishes. Each PR adds its line under `## [Unreleased]` in `CHANGELOG.md`. When
+every W1 item is closed, `/groom` proposes the release, and Joseph decides. Then one release PR turns
+`[Unreleased]` into the version's section. Joseph pushes the `v*` tag, `release.yml` uploads the bundle,
+and he presses **Publish** on the Central Portal by hand. Claude never tags or publishes.
 
 **DCO.** Every commit needs a `Signed-off-by` matching its author (`CONTRIBUTING.md`). Only a person can
 certify the DCO: never add one for Claude and never forge Joseph's. On a Claude-authored PR, list the
