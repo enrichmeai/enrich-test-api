@@ -55,4 +55,4 @@ Leave the PR as a draft. Do not widen scope to route around it.
   the ADRs' status lines. A new capability or module also changes the site page; its daily check will open an
   `enrich-test-api-sync` issue in `enrichmeai.github.io` after merge.
 - Run `/compound`. Mark the PR ready; end with branch, head SHA, files changed, gates and counts, reviewer
-  verdict, the Compound lines, and for Joseph: the **DCO sign-off** (only a person can certify it) and the merge.
+  verdict, the Compound lines, and for Joseph: the **DCO sign-off** (only a person can certify it) and the merge. Never change the version, tag or publish: releases are batched (CLAUDE.md § "Releases are batched").
