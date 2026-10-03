@@ -10,6 +10,10 @@
   adapter implements it from the running LocalStack. Feed it to a Spring Boot `@DynamicPropertySource` or a
   Quarkus `QuarkusTestResourceLifecycleManager`, with no import from `internal`, no vendor SDK type and no
   Testcontainers type. The SPI's default throws `UnsupportedOperationException`.
+- **A worked Spring Boot example** (`examples/spring-boot`, Story 8.3): a Spring Boot 3.5 service whose
+  `@SpringBootTest` configures its S3 client only from `connectionProperties()`. It is a standalone
+  project, not a module of the library. The new `examples` workflow builds and tests it against
+  each commit's library.
 
 ### Changed
 - **BREAKING: Java packages.** `org.deveasy.*` is now `com.enrichmeai.*`, matching the
