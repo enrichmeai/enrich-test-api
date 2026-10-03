@@ -10,15 +10,20 @@
   adapter implements it from the running LocalStack. Feed it to a Spring Boot `@DynamicPropertySource` or a
   Quarkus `QuarkusTestResourceLifecycleManager`, with no import from `internal`, no vendor SDK type and no
   Testcontainers type. The SPI's default throws `UnsupportedOperationException`.
-- **A worked Spring Boot example** (`examples/spring-boot`, Story 8.3): a Spring Boot 3.5 service whose
+- **A worked Spring Boot example** (`examples/spring-boot`, Story 8.3): a Spring Boot 4.1 service whose
   `@SpringBootTest` configures its S3 client only from `connectionProperties()`. It is a standalone
   project, not a module of the library. The new `examples` workflow builds and tests it against
   each commit's library.
-- **A worked Quarkus example** (`examples/quarkus`, Story 8.3): a Quarkus 3.27 LTS service whose
+- **A worked Quarkus example** (`examples/quarkus`, Story 8.3): a Quarkus 3.40 service whose
   `QuarkusTestResourceLifecycleManager` returns the application's configuration from
   `connectionProperties()`. The `examples` workflow builds and tests it too.
 
 ### Changed
+- **Testcontainers 2.0.5** (was 1.20.1), so the library sits beside Spring Boot 4 and Quarkus 3.31+, which
+  manage Testcontainers 2.x (#26). `test-cloud-aws` depends on `org.testcontainers:testcontainers-localstack`
+  (the 2.x name of `localstack`) and uses `org.testcontainers.localstack.LocalStackContainer`. LocalStack serves
+  every service on one endpoint, so each `cloud.endpoint.<service>` value is the same URI. A consumer still on
+  Testcontainers 1.x gets 2.x through this library.
 - **BREAKING: Java packages.** `org.deveasy.*` is now `com.enrichmeai.*`, matching the
   groupId. Every import changes by replacing the first two segments; everything after
   them is unchanged (`org.deveasy.test.core.junit.WithCloud` becomes

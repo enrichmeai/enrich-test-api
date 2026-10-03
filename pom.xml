@@ -27,7 +27,7 @@
 
         <!-- Dependency baseline (ADR 0005): centralised here, imported as BOMs below. -->
         <aws.sdk.v2.version>2.25.64</aws.sdk.v2.version>
-        <testcontainers.version>1.20.1</testcontainers.version>
+        <testcontainers.version>2.0.5</testcontainers.version>
         <junit.jupiter.version>5.10.2</junit.jupiter.version>
         <cucumber.version>7.15.0</cucumber.version>
         <jsonassert.version>1.5.1</jsonassert.version>

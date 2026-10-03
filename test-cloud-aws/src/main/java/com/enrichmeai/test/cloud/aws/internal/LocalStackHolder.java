@@ -4,7 +4,7 @@
 package com.enrichmeai.test.cloud.aws.internal;
 
 import java.util.concurrent.atomic.AtomicReference;
-import org.testcontainers.containers.localstack.LocalStackContainer;
+import org.testcontainers.localstack.LocalStackContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
@@ -26,12 +26,7 @@ public final class LocalStackHolder {
       return existing;
     }
     LocalStackContainer container =
-        new LocalStackContainer(LOCALSTACK_IMAGE)
-            .withServices(
-                LocalStackContainer.Service.S3,
-                LocalStackContainer.Service.SQS,
-                LocalStackContainer.Service.SNS,
-                LocalStackContainer.Service.DYNAMODB);
+        new LocalStackContainer(LOCALSTACK_IMAGE).withServices("s3", "sqs", "sns", "dynamodb");
     // Let Testcontainers manage lifecycle (stop on JVM shutdown)
     container.start();
     if (!REF.compareAndSet(null, container)) {
