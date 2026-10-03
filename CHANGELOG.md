@@ -14,6 +14,9 @@
   `@SpringBootTest` configures its S3 client only from `connectionProperties()`. It is a standalone
   project, not a module of the library. The new `examples` workflow builds and tests it against
   each commit's library.
+- **A worked Quarkus example** (`examples/quarkus`, Story 8.3): a Quarkus 3.27 LTS service whose
+  `QuarkusTestResourceLifecycleManager` returns the application's configuration from
+  `connectionProperties()`. The `examples` workflow builds and tests it too.
 
 ### Changed
 - **BREAKING: Java packages.** `org.deveasy.*` is now `com.enrichmeai.*`, matching the
