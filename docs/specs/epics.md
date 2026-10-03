@@ -634,7 +634,8 @@ consumer needs to import anything under `internal`.
 
 ### Story 8.3: Prove it with a framework test
 
-**Unblocked.**
+**Done for Spring Boot: [`examples/spring-boot`](../../examples/spring-boot), built and tested on every PR by the
+`examples` workflow (which settles the CI question below: it builds, outside the reactor). No Quarkus example yet.**
 
 As a Spring Boot author, I can start my application in a test with its cloud client pointed at the
 emulator, call my own endpoint, and assert on the resulting bucket or table.
