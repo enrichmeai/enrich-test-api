@@ -6,6 +6,15 @@
 
 The first release to Maven Central: `com.enrichmeai:test-core` and `com.enrichmeai:test-cloud-aws`.
 
+### Added
+- **An application under test can reach the emulator** (Epic 8, ADR 0011).
+  `CloudAdapter.connectionProperties()` returns the endpoints, region and credentials under
+  provider-neutral keys, which are constants in `ConnectionProperties`: `cloud.provider`, `cloud.mode`,
+  `cloud.region`, `cloud.credentials.key`, `cloud.credentials.secret` and `cloud.endpoint.<service>`. The AWS
+  adapter implements it from the running LocalStack. Feed it to a Spring Boot `@DynamicPropertySource` or a
+  Quarkus `QuarkusTestResourceLifecycleManager`, with no import from `internal`, no vendor SDK type and no
+  Testcontainers type. The SPI's default throws `UnsupportedOperationException`.
+
 ### Changed
 - **BREAKING: Java packages.** `org.deveasy.*` is now `com.enrichmeai.*`, matching the
   groupId. Every import changes by replacing the first two segments; everything after
