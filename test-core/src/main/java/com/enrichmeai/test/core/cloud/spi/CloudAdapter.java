@@ -5,11 +5,13 @@
 package com.enrichmeai.test.core.cloud.spi;
 
 import com.enrichmeai.test.core.cloud.CloudProvider;
+import com.enrichmeai.test.core.cloud.ConnectionProperties;
 import com.enrichmeai.test.core.cloud.TestCloudConfig;
 import com.enrichmeai.test.core.cloud.capability.BlobStorage;
 import com.enrichmeai.test.core.cloud.capability.NoSqlTable;
 import com.enrichmeai.test.core.cloud.capability.PubSub;
 import com.enrichmeai.test.core.cloud.capability.Queue;
+import java.util.Map;
 
 /**
  * Service Provider Interface (SPI) for cloud adapters.
@@ -80,4 +82,19 @@ public interface CloudAdapter {
    * @return the {@link NoSqlTable} capability, or {@code null}
    */
   NoSqlTable noSqlTable();
+
+  /**
+   * Returns what an application under test needs to reach the same emulator or account as this
+   * adapter: endpoints, region and credentials, under the provider-neutral keys in {@link
+   * ConnectionProperties} (ADR 0011). In emulator mode, calling this starts the emulator if it is
+   * not running yet. The map is unmodifiable.
+   *
+   * @return the connection properties
+   * @throws IllegalStateException if the adapter has not been initialized
+   * @throws UnsupportedOperationException if the adapter does not expose its connection
+   */
+  default Map<String, String> connectionProperties() {
+    throw new UnsupportedOperationException(
+        getClass().getName() + " does not expose connection properties");
+  }
 }
