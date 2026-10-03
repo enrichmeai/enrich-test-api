@@ -597,7 +597,7 @@ package, or depending on Testcontainers directly.
 
 ### Story 8.1: Choose the shape of the connection accessor
 
-**Decision required. Blocked on the maintainer.**
+**Done: Option A, [ADR 0011](../adr/0011-connection-properties-as-a-flat-map.md) (Joseph, 2026-10-03).**
 
 Three options, none obviously best.
 
@@ -626,7 +626,7 @@ either. It also records whether `SECRETS` and `KMS` (Story 6.4) should exist bef
 
 ### Story 8.2: Implement the accessor for the AWS adapter
 
-**Blocked on Story 8.1.**
+**Done: `AwsCloudAdapter.connectionProperties()`, proven by `AwsConnectionPropertiesIT`.**
 
 Acceptance: the chosen accessor is implemented in `AwsCloudAdapter` and returns values sourced from
 the running LocalStack container; `LocalStackHolder` stops being the only route to an endpoint; no
@@ -634,7 +634,7 @@ consumer needs to import anything under `internal`.
 
 ### Story 8.3: Prove it with a framework test
 
-**Blocked on Story 8.2.**
+**Unblocked.**
 
 As a Spring Boot author, I can start my application in a test with its cloud client pointed at the
 emulator, call my own endpoint, and assert on the resulting bucket or table.
