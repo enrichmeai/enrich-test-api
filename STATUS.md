@@ -4,6 +4,7 @@ Last updated: 2026-09-06
 
 ## Snapshot
 
+- Version `0.3.0-alpha1`, the first release to Maven Central (ADR 0009, 0010).
 - Java 17, Maven multi-module. `mvn -B verify` passes locally with Docker running and no skip flags.
 - Cloud SPI in `test-core`; one provider adapter, `test-cloud-aws`.
 - Four capabilities implemented against LocalStack: BlobStorage (S3), Queue (SQS), PubSub (SNS+SQS) and NoSqlTable (DynamoDB).
