@@ -67,6 +67,11 @@ public final class AwsClients {
     }
   }
 
+  /** The region the clients use: the configured one, or {@code us-east-1}. */
+  public static String region(TestCloudConfig cfg) {
+    return defaultRegion(cfg);
+  }
+
   private static String defaultRegion(TestCloudConfig cfg) {
     String r = cfg.regionOrLocation();
     return (r == null || r.isBlank()) ? "us-east-1" : r;

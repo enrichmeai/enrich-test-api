@@ -9,7 +9,7 @@ A toolkit for testing Java **cloud interactions** against local emulators rather
 
 The core defines small, provider-neutral capability interfaces. Provider adapters implement them and keep the vendor SDKs to themselves. Tests written against the core do not name a cloud provider.
 
-**What it does and does not do.** A test asks for a `BlobStorage` or a `Queue` and drives it directly, so you can assert that your code puts the right bytes in the right bucket. It does **not** configure your application under test: nothing in the provider-neutral API exposes an endpoint or a credential, so you cannot point a Spring Boot, Quarkus or Micronaut context at the emulator this library starts. For that today you would use Testcontainers' LocalStack module directly. Closing the gap is [Epic 8](docs/specs/epics.md) and needs an SPI decision first.
+**What it does and does not do.** A test asks for a `BlobStorage` or a `Queue` and drives it directly, so you can assert that your code puts the right bytes in the right bucket. To point your application under test at the same emulator, `CloudAdapter.connectionProperties()` returns its endpoints, region and credentials under provider-neutral keys (`ConnectionProperties`, [ADR 0011](docs/adr/0011-connection-properties-as-a-flat-map.md)). Copy them into your application's own configuration from a Spring Boot `@DynamicPropertySource` or a Quarkus `QuarkusTestResourceLifecycleManager`. A worked framework example (Epic 8, Story 8.3) is not written yet.
 
 Status: early-stage private alpha. AWS is the only provider, and only in emulator mode.
 
