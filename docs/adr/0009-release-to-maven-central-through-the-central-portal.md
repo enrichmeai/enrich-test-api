@@ -1,7 +1,7 @@
 # 9. Release to Maven Central through the Central Portal, from a tag, on JDK 17
 
 Date: 2026-09-09
-Status: Accepted
+Status: Accepted. The tag trigger is superseded by [ADR 0010](0010-release-on-merge-of-a-release-pr.md): a merged release PR releases.
 
 ## Context
 

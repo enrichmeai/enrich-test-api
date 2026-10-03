@@ -13,14 +13,15 @@ every run: **what blocks the next release, what Claude can take next, and what o
 - **W1 = the next release**: the version on `main` without `-SNAPSHOT` (today `0.3.0-alpha1`, the first
   publish). `W2` = the release after, `W3` = later. The planned backlog in `docs/specs/` and `STATUS.md`
   are the plan; where labels disagree with them, list it under Drift.
-- **Releases are batched** (CLAUDE.md § "Releases are batched"): W1 is the chunk of features the next tag
-  ships. When every W1 item is closed, the Release gate says **"W1 complete, ready to tag <version>"** and
+- **Releases are batched** (CLAUDE.md § "Releases are batched"): W1 is the chunk of features the next
+  release ships. When every W1 item is closed, the Release gate says **"W1 complete, ready to release <version>"** and
   puts the release in the Joseph queue: (1) a release PR (Claude) turns `[Unreleased]` into the version's
-  `CHANGELOG.md` section, updates `STATUS.md` and sets the next `-SNAPSHOT`; (2) Joseph pushes the `v*` tag,
-  and `release.yml` uploads the bundle; (3) Joseph presses Publish on the Central Portal; (4) the site's
+  `CHANGELOG.md` section, updates `STATUS.md` and sets every POM to the release version; (2) Joseph merges it,
+  and `release.yml` uploads the bundle and tags `v<version>` (ADR 0010); (3) Joseph presses Publish on the
+  Central Portal; (4) a follow-up PR sets the next `-SNAPSHOT`, and the site's
   `release-sync` opens an `enrich-test-api-sync` issue. Until Joseph says go, keep the gate open.
 - **Labels only from the set:** `wave:W1|W2|W3`, `area:*`, and owners `claude-ready` (buildable unattended,
-  tests prove it), `founder` (Joseph: the tag, Portal publishing, keys, rulings), `mac-session` (needs
+  tests prove it), `founder` (Joseph: the release PR merge, Portal publishing, keys, rulings), `mac-session` (needs
   credentials or a real account). The first run creates missing labels.
 - **Safe writes happen; closures wait.** Labels and one grooming comment per item. Closures are proposed on
   the board as checkboxes; Joseph ticks; the next run closes with the evidence.

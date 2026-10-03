@@ -1,124 +1,152 @@
 name: release
 
-# Publishes a tagged commit to the Sonatype Central Portal. See ADR 0009.
+# Publishes enrich-test-api to Maven Central through the Sonatype Central Portal. See ADR 0010
+# (this trigger, ported from enrichmeai/culvert's publish-maven.yml) and ADR 0009 (the bundle).
 #
-# Trigger by pushing a tag `vX.Y.Z` or `vX.Y.Z-qualifier` (for example v0.3.0-alpha1) on a
-# commit that is already green on the `build` and `quality-gates` workflows. The manual trigger
-# exists for a retry of the same version after a Portal-side failure; it publishes the branch or
-# tag it is run on, under the version typed in.
+# A RELEASE IS THE MERGE OF A RELEASE PR. The release PR sets every POM to the release version
+# (X.Y.Z or X.Y.Z-qualifier, never -SNAPSHOT) and turns CHANGELOG.md's [Unreleased] into that
+# version's section. When it merges, the `gate` job (scripts/release/gate.py) uploads only if the
+# push changed the root POM's version, the version is a release version, it is not already on
+# Maven Central, CHANGELOG.md has its "## [X.Y.Z...]" section, and every module POM carries it.
+# Any later pom.xml edit while the bundle waits in validation is therefore a no-op.
 #
-# The build runs on JDK 17 to match the release target (ADR 0007). It is the full lifecycle:
-# unit tests, the LocalStack integration tests, Spotless, Checkstyle, Enforcer and the JaCoCo
-# floors all run before anything is signed or uploaded.
+# The upload stops at the Portal's VALIDATED stage (autoPublish=false in the root POM). Pressing
+# Publish on central.sonatype.com stays a person's act, and a published version is permanent.
+# The manual run, with the typed confirm phrase, is the retry after a Portal-side failure.
 #
-# Required repository secrets, none of which exist until the maintainer creates them:
-#   MAVEN_CENTRAL_USERNAME / MAVEN_CENTRAL_PASSWORD  a Portal user token (not the account login)
-#   GPG_PRIVATE_KEY                                   ASCII-armoured private key whose public half
-#                                                     is on keyserver.ubuntu.com
-#   GPG_PASSPHRASE                                    its passphrase
-#
-# The Portal validates the bundle and holds it. Publishing is a manual step on
-# central.sonatype.com while `autoPublish` is false in the root POM.
+# Repository (or organisation) secrets, the same names as culvert's so one key and one token serve
+# both; agents never handle them:
+#   MAVEN_GPG_PRIVATE_KEY   ASCII-armoured private key (gpg --export-secret-keys --armor <KEY_ID>),
+#                           public half on keyserver.ubuntu.com
+#   MAVEN_GPG_PASSPHRASE    its passphrase
+#   CENTRAL_USERNAME        Central Portal user token, username half (not the account login)
+#   CENTRAL_PASSWORD        Central Portal user token, password half
+# The names ADR 0009 used (GPG_PRIVATE_KEY, GPG_PASSPHRASE, MAVEN_CENTRAL_USERNAME,
+# MAVEN_CENTRAL_PASSWORD) are still read as a fallback.
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+    paths: [pom.xml]
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to publish, without the leading v (for example 0.3.0-alpha1)'
+      confirm:
+        description: 'Type "publish-maven" to upload the version on main to the Central Portal'
         required: true
-        type: string
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: release
   cancel-in-progress: false
 
 jobs:
-  publish:
-    name: Publish to the Central Portal (JDK 17)
+  gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.decide.outputs.version }}
+      release: ${{ steps.decide.outputs.release }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the gate reads pom.xml at the push's `before` commit
+      - name: Gate tests
+        run: python3 -m unittest scripts/release/test_gate.py -v
+      - id: decide
+        env:
+          EVENT: ${{ github.event_name }}
+          CONFIRM: ${{ github.event.inputs.confirm }}
+          BEFORE: ${{ github.event.before }}
+          REF: ${{ github.ref }}
+        run: >-
+          python3 scripts/release/gate.py --event "$EVENT" --confirm "$CONFIRM"
+          --before "$BEFORE" --ref "$REF"
 
-      - name: Resolve the release version
-        id: version
+  verify:
+    needs: gate
+    if: needs.gate.outputs.release == 'true'
+    name: Verify and assemble the bundle (JDK 17, no secrets)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      # The full lifecycle, as `build` runs it: unit tests, the LocalStack integration tests,
+      # Spotless, Checkstyle, Enforcer and the JaCoCo floors.
+      - name: Full verify
+        run: mvn -B verify
+      # The release profile without signing proves sources and javadoc attach before any secret
+      # is touched. test-feature is not published (ADR 0009).
+      - name: Assemble the release jars (unsigned)
+        run: mvn -B -Prelease -Dgpg.skip -DskipTests -pl '!test-feature' install
+      - name: Assert every published module has main + sources + javadoc
+        env:
+          VERSION: ${{ needs.gate.outputs.version }}
         run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            version="${GITHUB_REF_NAME#v}"
-          else
-            version="${{ inputs.version }}"
-          fi
-          if ! echo "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
-            echo "::error::'$version' is not a release version (expected X.Y.Z or X.Y.Z-qualifier)"
-            exit 1
-          fi
-          # A SNAPSHOT version sends the plugin down its snapshot path, which uploads straight to
-          # the Portal's snapshot repository instead of building a bundle. Never do that from here.
-          case "$version" in
-            *SNAPSHOT*) echo "::error::'$version' is a snapshot; releases are tagged versions only"; exit 1 ;;
-          esac
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          case "$version" in
-            *-*) echo "prerelease=true" >> "$GITHUB_OUTPUT" ;;
-            *)   echo "prerelease=false" >> "$GITHUB_OUTPUT" ;;
-          esac
+          missing=0
+          for m in test-core test-cloud-aws; do
+            for suffix in "" "-sources" "-javadoc"; do
+              f="$m/target/$m-$VERSION$suffix.jar"
+              if [ -f "$f" ]; then echo "ok $f"; else echo "MISSING $f"; missing=1; fi
+            done
+          done
+          exit $missing
 
+  deploy:
+    needs: [gate, verify]
+    if: needs.gate.outputs.release == 'true'
+    name: Sign and upload to the Central Portal
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: maven-central
+    permissions:
+      contents: write   # the GitHub release and its v* tag, after the upload
+    steps:
+      - uses: actions/checkout@v4
       # setup-java writes ~/.m2/settings.xml with a `central` server whose credentials are read
       # from the named environment variables at build time, and imports the GPG key.
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-          cache: 'maven'
+          cache: maven
           server-id: central
-          server-username: MAVEN_CENTRAL_USERNAME
-          server-password: MAVEN_CENTRAL_PASSWORD
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY || secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
-
-      - name: Docker info (debug)
-        run: docker version
-
-      # main carries a -SNAPSHOT version; the tag is the source of truth for what is released.
-      - name: Set the version from the tag
-        run: >
-          mvn -B -q org.codehaus.mojo:versions-maven-plugin:2.18.0:set
-          -DnewVersion="${{ steps.version.outputs.version }}"
-          -DgenerateBackupPoms=false
-
-      # test-feature has no main sources, so it cannot carry the sources and javadoc jars Central
-      # requires, and it is not published. It is also last in the reactor's build order (it depends
-      # on both other modules, whatever the order in <modules>), and the plugin uploads from the
-      # last module it runs in; excluding it keeps that module a published one.
-      - name: Build, sign and upload the bundle
+      # Tests ran in `verify` on this commit. The plugin uploads from the last module in the
+      # reactor; leaving test-feature out keeps that a published one (ADR 0009).
+      - name: Deploy to the Central Portal (validation stage; a person presses Publish)
         env:
-          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: mvn -B -Prelease -pl '!test-feature' deploy
-
+          MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME || secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD || secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE || secrets.GPG_PASSPHRASE }}
+        run: mvn -B -Prelease -DskipTests -pl '!test-feature' deploy
       - name: Upload the signed artifacts as a workflow artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: release-${{ steps.version.outputs.version }}
+          name: release-${{ needs.gate.outputs.version }}
           path: |
             test-core/target/*.jar
             test-core/target/*.asc
             test-cloud-aws/target/*.jar
             test-cloud-aws/target/*.asc
-
-      - name: Create the GitHub release
-        if: github.event_name == 'push'
+      - name: Tag and create the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.gate.outputs.version }}
         run: |
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "v$VERSION already has a GitHub release"; exit 0
+          fi
           flags="--generate-notes"
-          if [ "${{ steps.version.outputs.prerelease }}" = "true" ]; then flags="$flags --prerelease"; fi
-          gh release create "$GITHUB_REF_NAME" --title "${{ steps.version.outputs.version }}" $flags
+          case "$VERSION" in *-*) flags="$flags --prerelease" ;; esac
+          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "$VERSION" $flags

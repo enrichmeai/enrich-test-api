@@ -17,6 +17,12 @@
   when a `v*` tag is pushed and creates a GitHub release. `test-feature` is not
   published. Publishing is a manual step on central.sonatype.com. See ADR 0009.
 - The version on `main` is `0.3.0-alpha1-SNAPSHOT`; the tag sets the released version.
+- **A merged release PR releases, as in culvert** (ADR 0010, superseding ADR 0009's tag trigger).
+  `release.yml` runs `scripts/release/gate.py` when `pom.xml` changes on `main`: it uploads only a new,
+  non-SNAPSHOT version that every POM carries and `CHANGELOG.md` has a section for, verifies and
+  assembles the bundle without secrets first, then signs, uploads and tags `v<version>`. Secrets use
+  culvert's names (`CENTRAL_USERNAME`, `CENTRAL_PASSWORD`, `MAVEN_GPG_PRIVATE_KEY`,
+  `MAVEN_GPG_PASSPHRASE`); ADR 0009's names are read as a fallback.
 
 ### Removed
 - The inert OSSRH publishing configuration (Story 6.3, replaced rather than deleted):
