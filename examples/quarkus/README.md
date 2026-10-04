@@ -1,6 +1,6 @@
 # Quarkus example: point your application at the emulator
 
-A small Quarkus 3.27 service (`PUT` and `GET /files/{name}` against an S3 bucket) and one
+A small Quarkus 3.40 service (`PUT` and `GET /files/{name}` against an S3 bucket) and one
 `@QuarkusTest` that runs it against the LocalStack emulator enrich-test-api starts.
 
 The whole integration is [`EmulatorResource`](src/test/java/com/example/uploads/EmulatorResource.java),
@@ -20,6 +20,5 @@ mvn -B install -DskipTests -pl test-core,test-cloud-aws -am
 mvn -B -f examples/quarkus/pom.xml -Denrich-test-api.version=<the root pom's version> verify
 ```
 
-Quarkus 3.27 (LTS) rather than the latest: 3.31 and later manage Testcontainers 2.x, and
-`test-cloud-aws` is built on Testcontainers 1.20. Dev Services are switched off, because the emulator
-comes from the library.
+Quarkus manages Testcontainers 2.x, the same line `test-cloud-aws` is built on. Dev Services are switched
+off, because the emulator comes from the library.

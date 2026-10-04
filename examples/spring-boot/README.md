@@ -1,6 +1,6 @@
 # Spring Boot example: point your application at the emulator
 
-A small Spring Boot 3.5 service (`PUT /files/{name}` stores the body in an S3 bucket) and one
+A small Spring Boot 4 service (`PUT /files/{name}` stores the body in an S3 bucket) and one
 `@SpringBootTest` that starts it against the LocalStack emulator enrich-test-api starts.
 
 The whole integration is the `@DynamicPropertySource` method in
@@ -18,8 +18,7 @@ mvn -B -f examples/spring-boot/pom.xml -Denrich-test-api.version=<the root pom's
 
 Outside this repository, drop `-Denrich-test-api.version` to use the released version in the POM.
 
-Spring Boot 3.5 rather than 4.x: Boot 4 manages Testcontainers 2.x, and `test-cloud-aws` is built on
-Testcontainers 1.20. This project is not a module of the library's build, and the `examples` workflow
-builds it on every PR.
+This project is not a module of the library's build. The `examples` workflow builds it on every PR.
+It uses the Testcontainers 2.x that Spring Boot 4 manages, the same line `test-cloud-aws` is built on.
 
 For Quarkus, see [`../quarkus`](../quarkus).
