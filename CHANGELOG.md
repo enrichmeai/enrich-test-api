@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.3.0-alpha1] - 2026-10-04
+
+The first release to Maven Central: `com.enrichmeai:test-core` and `com.enrichmeai:test-cloud-aws`.
+
 ### Added
 - **An application under test can reach the emulator** (Epic 8, ADR 0011).
   `CloudAdapter.connectionProperties()` returns the endpoints, region and credentials under
@@ -37,7 +41,7 @@
   `central-publishing-maven-plugin`; `.github/workflows/release.yml` runs it on JDK 17
   when a `v*` tag is pushed and creates a GitHub release. `test-feature` is not
   published. Publishing is a manual step on central.sonatype.com. See ADR 0009.
-- The version on `main` is `0.3.0-alpha1-SNAPSHOT`; the tag sets the released version.
+- The version is `0.3.0-alpha1`, the first public release (ADR 0009).
 - **A merged release PR releases, as in culvert** (ADR 0010, superseding ADR 0009's tag trigger).
   `release.yml` runs `scripts/release/gate.py` when `pom.xml` changes on `main`: it uploads only a new,
   non-SNAPSHOT version that every POM carries and `CHANGELOG.md` has a section for, verifies and
