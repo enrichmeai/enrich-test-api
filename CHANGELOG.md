@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.3.0-alpha1] - 2026-10-03
+## [0.3.0-alpha1] - 2026-10-04
 
 The first release to Maven Central: `com.enrichmeai:test-core` and `com.enrichmeai:test-cloud-aws`.
 
