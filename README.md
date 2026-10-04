@@ -164,39 +164,41 @@ records remain in `docs/adr/`.
 
 ## Releasing
 
-Releases go to Maven Central through the Sonatype Central Portal, from a tag, on JDK 17.
-The mechanics are recorded in [ADR 0009](docs/adr/0009-release-to-maven-central-through-the-central-portal.md);
-this is the operator's view.
+Releases go to Maven Central through the Sonatype Central Portal, on JDK 17, when a release PR
+merges. The mechanics are recorded in [ADR 0009](docs/adr/0009-release-to-maven-central-through-the-central-portal.md)
+(the bundle) and [ADR 0010](docs/adr/0010-release-on-merge-of-a-release-pr.md) (the trigger, the same as
+culvert's); this is the operator's view.
 
 **Once, before the first release** — none of this can be done from the repository:
 
 1. Verify the `com.enrichmeai` namespace on [central.sonatype.com](https://central.sonatype.com)
    (a TXT record on `enrichmeai.com`).
-2. Generate a Portal **user token** and store it as the repository secrets
-   `MAVEN_CENTRAL_USERNAME` and `MAVEN_CENTRAL_PASSWORD`.
-3. Create a signing key, publish its public half, and store the private half:
+2. Make the four secrets available to this repository, under the same names culvert uses, so one
+   key and one Portal token serve both (as organisation secrets, or set again here):
+   `CENTRAL_USERNAME` and `CENTRAL_PASSWORD` (a Portal **user token**, not the account login),
+   `MAVEN_GPG_PRIVATE_KEY` and `MAVEN_GPG_PASSPHRASE`. For a new key:
 
    ```sh
    gpg --quick-gen-key "enrichmeai release <release@your-domain>" rsa4096 sign 2y
    gpg --list-keys --keyid-format long          # note the key id
    gpg --keyserver keyserver.ubuntu.com --send-keys <key id>
-   gpg --armor --export-secret-keys <key id> | gh secret set GPG_PRIVATE_KEY
-   gh secret set GPG_PASSPHRASE                  # the passphrase you chose
+   gpg --armor --export-secret-keys <key id> | gh secret set MAVEN_GPG_PRIVATE_KEY
+   gh secret set MAVEN_GPG_PASSPHRASE            # the passphrase you chose
    ```
+3. Optionally, add required reviewers to the `maven-central` environment for a second gate.
 
-**Every release:**
-
-```sh
-git tag v0.3.0-alpha1 <commit that is green on build and quality-gates>
-git push origin v0.3.0-alpha1
-```
-
-The `release` workflow builds on Temurin 17, runs the full verify including the LocalStack
-tests, signs everything, uploads the bundle for `enrich-test-api`, `test-core` and
-`test-cloud-aws` (not `test-feature`, which has no main sources), and creates a GitHub
+**Every release:** a release PR sets the root POM and every module POM to the release version
+(for example `0.3.0-alpha1`, never `-SNAPSHOT`) and turns `## [Unreleased]` in `CHANGELOG.md` into
+that version's section. Merging it runs the `release` workflow. Its gate checks that the version
+changed, is not already on Maven Central, has its CHANGELOG section and is the same in every POM.
+Then it runs the full verify including the LocalStack tests, checks that the sources and javadoc jars
+assemble, signs everything, uploads the bundle for `enrich-test-api`, `test-core` and `test-cloud-aws`
+(not `test-feature`, which has no main sources), and tags the merged commit `v<version>` with a GitHub
 release. The Portal validates the bundle and holds it: **publishing is a manual click on
-central.sonatype.com** while `autoPublish` is `false` in the root POM. A plain `mvn -B verify`
-never activates the `release` profile and needs none of the secrets.
+central.sonatype.com** while `autoPublish` is `false` in the root POM. A follow-up PR sets the next
+`-SNAPSHOT`. To retry after a Portal-side failure, run the workflow by hand on `main` and type
+`publish-maven`. A plain `mvn -B verify` never activates the `release` profile and needs none of the
+secrets.
 
 To rehearse locally without uploading anything, run the profile up to signing with a
 throwaway key:

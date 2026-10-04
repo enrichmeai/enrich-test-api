@@ -41,3 +41,7 @@ atlassian-ide-plugin.xml
 .gitignore
 src/main/resources/
 src/test/resources/
+
+# Python bytecode (scripts/release)
+__pycache__/
+*.pyc

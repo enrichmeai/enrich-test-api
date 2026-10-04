@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse(Bash): force a permission prompt for destructive, publishing or cloud-touching commands.
-# Ported from enrichmeai/valuedocs via enrichmeai/culvert (2026-09-26). Releases here are `v*` tags
-# (release.yml) and `mvn -Prelease deploy`, both Joseph's (CLAUDE.md § "Autonomous build loop").
+# Ported from enrichmeai/valuedocs via enrichmeai/culvert (2026-09-26). Releases here are merged release
+# PRs (release.yml, ADR 0010) and `mvn -Prelease deploy`, both Joseph's (CLAUDE.md § "Autonomous build loop").
 #
 # Why a hook as well as `ask` rules in settings.json: a Bash rule matches the command as written,
 # so `Bash(git push *)` does not match `git -C . push --force` (docs: code.claude.com/docs/en/permissions,
@@ -32,7 +32,7 @@ check "${P}terraform([[:space:]]+-[^[:space:]]+)*[[:space:]]+(apply|destroy|impo
 check "${P}(aws|gcloud)[[:space:]]" 'cloud CLI against a real account (this library is emulator-only)'
 check "${P}(gsutil|bq|kubectl)[[:space:]]" 'direct cloud data/infra CLI'
 check "${P}helm[[:space:]]+(install|upgrade|uninstall|delete|rollback)" 'helm release change'
-# Publishing: Maven Central releases are Joseph's trigger (a v* tag runs release.yml).
+# Publishing: Maven Central releases are Joseph's trigger (a merged release PR runs release.yml).
 check "${P}mvnw?[^|;&]*[[:space:]](deploy|release:[a-z]+)([[:space:]]|$)" 'Maven deploy/release (publishes artifacts)'
 check "${P}mvnw?[^|;&]*[[:space:]]-P[[:space:]]*[^[:space:]]*release" 'Maven release profile'
 check "${P}(twine[[:space:]]+upload|hatch[[:space:]]+publish|flit[[:space:]]+publish|poetry[[:space:]]+publish|uv[[:space:]]+publish)" 'publish to PyPI'

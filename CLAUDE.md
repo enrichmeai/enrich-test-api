@@ -14,8 +14,8 @@ Guidance for Claude Code in this repository. It reaches every session.
   - `test-feature`: Cucumber scenarios. It has no main sources and is not published.
 - **Truth lives in:** `STATUS.md` (what is built and measured), `CHANGELOG.md`, `docs/adr/` (decisions,
   do not relitigate), `docs/specs/` (BMAD planning: brief, PRD, architecture, epics).
-- **Releases:** a `v*` tag runs `.github/workflows/release.yml` → Maven Central through the Central Portal
-  (ADR 0009), with Joseph pressing Publish. Nothing has been published yet; `main` is `0.3.0-alpha1-SNAPSHOT`.
+- **Releases:** merging a release PR (the POM versions plus the CHANGELOG section) runs `.github/workflows/release.yml`
+  → `scripts/release/gate.py` → Maven Central through the Central Portal (ADR 0009, 0010), with Joseph pressing Publish. Nothing has been published yet; `main` is `0.3.0-alpha1-SNAPSHOT`.
 - **The site page** `enrichmeai.github.io/enrich-test-api/` is checked against this repo every day by that
   repo's `release-sync` workflow: the version on `main`, the next tag, what Maven Central has, one row per
   published artifact and one per capability interface. A new capability, module or release here opens an
@@ -66,8 +66,8 @@ convergence) and the per-module JaCoCo floors. Never lower a floor or skip a gat
 happens only once a chunk of features is done: the `wave:W1` set on the Release board. No PR changes
 the version, tags or publishes. Each PR adds its line under `## [Unreleased]` in `CHANGELOG.md`. When
 every W1 item is closed, `/groom` proposes the release, and Joseph decides. Then one release PR turns
-`[Unreleased]` into the version's section. Joseph pushes the `v*` tag, `release.yml` uploads the bundle,
-and he presses **Publish** on the Central Portal by hand. Claude never tags or publishes.
+`[Unreleased]` into the version's section. Joseph merges it, `release.yml` uploads the bundle and tags `v<version>`,
+and he presses **Publish** on the Central Portal by hand (ADR 0010). Claude never merges, tags or publishes.
 
 **DCO.** Every commit needs a `Signed-off-by` matching its author (`CONTRIBUTING.md`). Only a person can
 certify the DCO: never add one for Claude and never forge Joseph's. On a Claude-authored PR, list the

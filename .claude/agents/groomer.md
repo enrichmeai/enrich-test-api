@@ -15,7 +15,7 @@ edit files. Be fast: title, body, last comment, and at most one `git log --grep`
   that lies, a ruling from Joseph, or a hard dependency of another W1 item. `W2` = the release after, `W3` = later.
   Cross-check against `docs/specs/` and `STATUS.md`; note disagreements.
 - **owner:** `claude-ready` (buildable unattended, tests prove it, no real cloud account), `founder`
-  (the tag, Portal publishing, keys, rulings), `mac-session` (credentials or a real account).
+  (the release PR merge, Portal publishing, keys, rulings), `mac-session` (credentials or a real account).
 - **ready:** true only if the `claude-task` template is met (Goal, Measure or why none, Evidence of done with
   the red test, one Risk, Surface, Out of scope, no open question). Otherwise name what is missing.
 - **close?:** `fixed` (merged PR or SHA), `duplicate` (the number) or `obsolete` (ruling, deleted path,
