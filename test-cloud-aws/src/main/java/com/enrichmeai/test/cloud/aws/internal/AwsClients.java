@@ -6,7 +6,7 @@ package com.enrichmeai.test.cloud.aws.internal;
 import com.enrichmeai.test.core.cloud.CloudMode;
 import com.enrichmeai.test.core.cloud.TestCloudConfig;
 import java.net.URI;
-import org.testcontainers.containers.localstack.LocalStackContainer;
+import org.testcontainers.localstack.LocalStackContainer;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
@@ -25,7 +25,7 @@ public final class AwsClients {
     if (cfg.mode() == CloudMode.EMULATOR) {
       LocalStackContainer ls = LocalStackHolder.ensureStartedS3();
       Region region = Region.of(defaultRegion(cfg));
-      URI endpoint = ls.getEndpointOverride(LocalStackContainer.Service.S3);
+      URI endpoint = ls.getEndpoint();
       AwsCredentialsProvider creds =
           StaticCredentialsProvider.create(
               AwsBasicCredentials.create(ls.getAccessKey(), ls.getSecretKey()));
@@ -49,7 +49,7 @@ public final class AwsClients {
     if (cfg.mode() == CloudMode.EMULATOR) {
       LocalStackContainer ls = LocalStackHolder.ensureStartedS3(); // same holder starts SQS
       Region region = Region.of(defaultRegion(cfg));
-      URI endpoint = ls.getEndpointOverride(LocalStackContainer.Service.SQS);
+      URI endpoint = ls.getEndpoint();
       AwsCredentialsProvider creds =
           StaticCredentialsProvider.create(
               AwsBasicCredentials.create(ls.getAccessKey(), ls.getSecretKey()));
@@ -81,7 +81,7 @@ public final class AwsClients {
     if (cfg.mode() == CloudMode.EMULATOR) {
       LocalStackContainer ls = LocalStackHolder.ensureStartedSns();
       Region region = Region.of(defaultRegion(cfg));
-      URI endpoint = ls.getEndpointOverride(LocalStackContainer.Service.SNS);
+      URI endpoint = ls.getEndpoint();
       AwsCredentialsProvider creds =
           StaticCredentialsProvider.create(
               AwsBasicCredentials.create(ls.getAccessKey(), ls.getSecretKey()));
@@ -103,7 +103,7 @@ public final class AwsClients {
     if (cfg.mode() == CloudMode.EMULATOR) {
       LocalStackContainer ls = LocalStackHolder.ensureStartedDynamoDB();
       Region region = Region.of(defaultRegion(cfg));
-      URI endpoint = ls.getEndpointOverride(LocalStackContainer.Service.DYNAMODB);
+      URI endpoint = ls.getEndpoint();
       AwsCredentialsProvider creds =
           StaticCredentialsProvider.create(
               AwsBasicCredentials.create(ls.getAccessKey(), ls.getSecretKey()));

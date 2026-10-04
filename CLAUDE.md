@@ -83,7 +83,7 @@ label, `.github/workflows/claude.yml`) counts as that session.
 
 ### Pinned docs
 
-Versions the build resolves (root `pom.xml`): Java 17, JUnit 5.10.2, Testcontainers 1.20.1, Cucumber
+Versions the build resolves (root `pom.xml`): Java 17, JUnit 5.10.2, Testcontainers 2.0.5, Cucumber
 7.15.0, AWS SDK v2 2.25.64, LocalStack image 3.8 (`LocalStackHolder`). Added 2026-09-26; nothing below has
 been fetched from a session yet — the first session that fetches a row marks it ✓.
 

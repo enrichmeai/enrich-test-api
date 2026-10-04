@@ -1,0 +1,54 @@
+name: examples
+
+# Builds the standalone examples against the library as it is on this commit, so they cannot rot
+# (Epic 8, Story 8.3). Each example is its own Maven project, never a module of the reactor: Spring
+# Boot is on this workflow's build, not on the library's. Docker is needed, as in `build`.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  spring-boot:
+    name: Spring Boot example (JDK 17)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: 'maven'
+      - name: Install the library from this commit (tests run in `build`)
+        run: mvn -B install -DskipTests -Djacoco.skip=true -pl test-core,test-cloud-aws -am
+      - name: Build and test the example against it
+        run: |
+          version=$(mvn -B -q -N help:evaluate -Dexpression=project.version -DforceStdout)
+          mvn -B -f examples/spring-boot/pom.xml -Denrich-test-api.version="$version" verify
+
+  quarkus:
+    name: Quarkus example (JDK 17)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: 'maven'
+      - name: Install the library from this commit (tests run in `build`)
+        run: mvn -B install -DskipTests -Djacoco.skip=true -pl test-core,test-cloud-aws -am
+      - name: Build and test the example against it
+        run: |
+          version=$(mvn -B -q -N help:evaluate -Dexpression=project.version -DforceStdout)
+          mvn -B -f examples/quarkus/pom.xml -Denrich-test-api.version="$version" verify

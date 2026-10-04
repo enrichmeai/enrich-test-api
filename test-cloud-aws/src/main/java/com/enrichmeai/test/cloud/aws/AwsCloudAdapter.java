@@ -18,16 +18,24 @@ import com.enrichmeai.test.core.cloud.capability.Queue;
 import com.enrichmeai.test.core.cloud.spi.CloudAdapter;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import org.testcontainers.containers.localstack.LocalStackContainer;
-import org.testcontainers.containers.localstack.LocalStackContainer.Service;
+import org.testcontainers.localstack.LocalStackContainer;
 
 /** AWS adapter implementation. Provides BlobStorage (S3) in v0.3. */
 public final class AwsCloudAdapter implements CloudAdapter {
 
-  /** The LocalStack service behind each capability this adapter implements. */
-  private static final Map<CloudServiceType, Service> SERVICES = services();
+  /**
+   * The services this adapter implements. LocalStack serves them all on one endpoint, so each
+   * {@code cloud.endpoint.<service>} key carries the same URI.
+   */
+  private static final List<CloudServiceType> SERVICES =
+      List.of(
+          CloudServiceType.STORAGE,
+          CloudServiceType.QUEUE,
+          CloudServiceType.PUBSUB,
+          CloudServiceType.NOSQL);
 
   private TestCloudConfig config;
 
@@ -81,21 +89,10 @@ public final class AwsCloudAdapter implements CloudAdapter {
       LocalStackContainer ls = LocalStackHolder.ensureStartedS3();
       p.put(ConnectionProperties.CREDENTIALS_KEY, ls.getAccessKey());
       p.put(ConnectionProperties.CREDENTIALS_SECRET, ls.getSecretKey());
-      SERVICES.forEach(
-          (type, service) ->
-              p.put(
-                  ConnectionProperties.endpoint(type), ls.getEndpointOverride(service).toString()));
+      String endpoint = ls.getEndpoint().toString();
+      SERVICES.forEach(type -> p.put(ConnectionProperties.endpoint(type), endpoint));
     }
     return Collections.unmodifiableMap(p);
-  }
-
-  private static Map<CloudServiceType, Service> services() {
-    Map<CloudServiceType, Service> m = new LinkedHashMap<>();
-    m.put(CloudServiceType.STORAGE, Service.S3);
-    m.put(CloudServiceType.QUEUE, Service.SQS);
-    m.put(CloudServiceType.PUBSUB, Service.SNS);
-    m.put(CloudServiceType.NOSQL, Service.DYNAMODB);
-    return Collections.unmodifiableMap(m);
   }
 
   private void ensureInitialized() {
