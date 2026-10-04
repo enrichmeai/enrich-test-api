@@ -22,6 +22,4 @@ Spring Boot 3.5 rather than 4.x: Boot 4 manages Testcontainers 2.x, and `test-cl
 Testcontainers 1.20. This project is not a module of the library's build, and the `examples` workflow
 builds it on every PR.
 
-**Quarkus** takes the same map from a `QuarkusTestResourceLifecycleManager`, whose `start()`
-returns `Map<String, String>`: return the application's keys filled from `connectionProperties()`.
-There is no worked Quarkus example yet.
+For Quarkus, see [`../quarkus`](../quarkus).
