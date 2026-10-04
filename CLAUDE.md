@@ -15,7 +15,7 @@ Guidance for Claude Code in this repository. It reaches every session.
 - **Truth lives in:** `STATUS.md` (what is built and measured), `CHANGELOG.md`, `docs/adr/` (decisions,
   do not relitigate), `docs/specs/` (BMAD planning: brief, PRD, architecture, epics).
 - **Releases:** merging a release PR (the POM versions plus the CHANGELOG section) runs `.github/workflows/release.yml`
-  → `scripts/release/gate.py` → Maven Central through the Central Portal (ADR 0009, 0010), with Joseph pressing Publish. `main` is `0.3.0-alpha1`, the first release; a follow-up PR sets the next `-SNAPSHOT`.
+  → `scripts/release/gate.py` → Maven Central through the Central Portal (ADR 0009, 0010), with Joseph pressing Publish. `0.3.0-alpha1` was the first release (published 2026-10-04); `main` is `0.3.0-alpha2-SNAPSHOT`.
 - **The site page** `enrichmeai.github.io/enrich-test-api/` is checked against this repo every day by that
   repo's `release-sync` workflow: the version on `main`, the next tag, what Maven Central has, one row per
   published artifact and one per capability interface. A new capability, module or release here opens an
