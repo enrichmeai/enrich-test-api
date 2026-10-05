@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Tests
+- `AwsDynamoDB` is covered on missing tables and keys, partition-only and composite keys, deletes
+  of what is not there, empty tables, results across more than one page, and every value type it
+  marshals (Story 1.2, #31).
+
 ## [0.3.0-alpha1] - 2026-10-04
 
 The first release to Maven Central: `com.enrichmeai:test-core` and `com.enrichmeai:test-cloud-aws`.
