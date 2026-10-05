@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Tests
+- `CloudExtension` is covered on the paths a user meets when something is missing: a class with no
+  `@WithCloud`, an adapter that supports no capability (each parameter fails naming it), and a
+  parameter type the extension does not provide (Story 1.1, #30).
+
 ## [0.3.0-alpha1] - 2026-10-04
 
 The first release to Maven Central: `com.enrichmeai:test-core` and `com.enrichmeai:test-cloud-aws`.
