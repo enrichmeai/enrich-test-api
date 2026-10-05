@@ -5,7 +5,8 @@
 ### Tests
 - `CloudAdapters` and `TestCloudConfig` are covered: the adapter lookup, its failure naming the
   provider and module, a registered adapter whose `provider()` throws, and a config that reads back
-  every field and cannot be changed after it is built (Story 1.6, #34).
+  every field and cannot be changed after it is built, and every `CloudServiceType` value
+  round-trips through its name (Story 1.6, #34).
 
 ## [0.3.0-alpha1] - 2026-10-04
 

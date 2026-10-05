@@ -1,6 +1,7 @@
 package com.enrichmeai.test.core.cloud;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -76,7 +77,7 @@ class TestCloudConfigTest {
       if (m.isSynthetic() || !Modifier.isPublic(m.getModifiers())) continue;
       if (Modifier.isStatic(m.getModifiers())) continue; // builder()
       assertNotEquals(void.class, m.getReturnType(), m.getName() + " looks like a mutator");
-      assertTrue(!m.getName().startsWith("set"), m.getName() + " looks like a setter");
+      assertFalse(m.getName().startsWith("set"), m.getName() + " looks like a setter");
     }
   }
 }
