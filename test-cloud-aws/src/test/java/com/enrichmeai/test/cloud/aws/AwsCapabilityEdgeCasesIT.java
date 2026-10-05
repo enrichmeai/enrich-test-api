@@ -62,11 +62,14 @@ class AwsCapabilityEdgeCasesIT {
     for (String region : new String[] {"eu-west-1", "us-east-1", null}) {
       BlobStorage storage = new AwsBlobStorage(config(region));
       String bucket = name("b");
-      storage.ensureBucket(bucket);
-      storage.ensureBucket(bucket); // already there: the head succeeds and nothing is created
-      storage.putObject(bucket, "k", utf8("v"), "text/plain");
-      assertTrue(storage.exists(bucket, "k"), "region " + region);
-      storage.deleteBucket(bucket);
+      try {
+        storage.ensureBucket(bucket);
+        storage.ensureBucket(bucket); // already there: the head succeeds and nothing is created
+        storage.putObject(bucket, "k", utf8("v"), "text/plain");
+        assertTrue(storage.exists(bucket, "k"), "region " + region);
+      } finally {
+        storage.deleteBucket(bucket);
+      }
     }
   }
 
@@ -77,7 +80,16 @@ class AwsCapabilityEdgeCasesIT {
     String bucket = name("b");
     String missingBucket = name("never");
     storage.ensureBucket(bucket);
+    try {
+      blobStorageAbsences(storage, bucket, missingBucket);
+    } finally {
+      storage.deleteBucket(bucket);
+    }
+  }
 
+  private static void blobStorageAbsences(
+      AwsBlobStorage storage, String bucket, String missingBucket) {
+    assertEquals(List.of(), storage.listKeys(bucket, null), "a new bucket lists nothing");
     assertNull(storage.getObject(bucket, "absent"));
     assertNull(storage.getString(bucket, "absent"));
     assertFalse(storage.exists(bucket, "absent"));
@@ -153,6 +165,40 @@ class AwsCapabilityEdgeCasesIT {
       queue.deleteQueue(sub);
       pubsub.deleteTopic(topic);
       pubsub.deleteTopic(later);
+    }
+  }
+
+  @Test
+  @DisplayName("AC-8: two topics whose names share a suffix resolve to their own ARNs")
+  void topicsWhoseNamesShareASuffix() {
+    TestCloudConfig cfg = config("eu-west-1");
+    PubSub pubsub = new AwsPubSub(cfg);
+    Queue queue = new AwsQueue(cfg);
+    String base = name("orders");
+    String longer = "x-" + base; // ends with the shorter name
+    String subBase = name("q");
+    String subLonger = name("q");
+    queue.ensureQueue(subBase);
+    queue.ensureQueue(subLonger);
+    try {
+      pubsub.ensureTopic(longer);
+      pubsub.ensureTopic(base);
+      pubsub.ensureSubscription(base, subBase);
+      pubsub.ensureSubscription(longer, subLonger);
+
+      pubsub.publish(base, "to-base");
+      pubsub.publish(longer, "to-longer");
+
+      // Each message arrives only on its own topic's subscription.
+      assertEquals(Optional.of("to-base"), pubsub.receive(subBase, Duration.ofSeconds(10)));
+      assertEquals(Optional.of("to-longer"), pubsub.receive(subLonger, Duration.ofSeconds(10)));
+      assertEquals(Optional.empty(), pubsub.receive(subBase, Duration.ofSeconds(1)));
+      assertEquals(Optional.empty(), pubsub.receive(subLonger, Duration.ofSeconds(1)));
+    } finally {
+      queue.deleteQueue(subBase);
+      queue.deleteQueue(subLonger);
+      pubsub.deleteTopic(base);
+      pubsub.deleteTopic(longer);
     }
   }
 
