@@ -37,11 +37,11 @@ Before September 2026 the integration tests and the Cucumber suite matched no co
 
 | Module | Line | Branch |
 | --- | --- | --- |
-| test-core | 104/178, 0.58 | 14/46, 0.30 |
-| test-cloud-aws | 344/516, 0.66 | 81/228, 0.35 |
+| test-core | 190/224, 0.85 | 28/42, 0.67 |
+| test-cloud-aws | 395/539, 0.73 | 110/244, 0.45 |
 | test-feature | no main sources | no main sources |
 
-Floors are set to these measured values. The target of line 0.80 and branch 0.70 is not met. The largest single gap is `CloudExtension` in test-core at 12 of 42 branches, and the error-handling paths of `AwsDynamoDB` at 43 of 130.
+Read from the "Coverage totals (JaCoCo)" step of `build` run 37358430480 (this branch, the same main code as `d4f0f65`), 2026-10-05. The floors in the POMs (test-core 0.58 / 0.30, test-cloud-aws 0.66 / 0.35) were set in September and are now below these values; Story 1.4 (#37) raises them once Epic 1's tests land. The target of line 0.80 and branch 0.70 is met for test-core lines only. The largest gaps are `AwsDynamoDB` (76 of 138 branches uncovered), `AwsBlobStorage` (28 of 40) and `AwsPubSub` (16 of 26) in test-cloud-aws, and `CloudExtension` (12 of 38) in test-core.
 
 ## Known limitations
 
