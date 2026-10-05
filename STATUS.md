@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-09-06
+Last updated: 2026-10-05
 
 ## Snapshot
 
@@ -8,15 +8,17 @@ Last updated: 2026-09-06
 - Java 17, Maven multi-module. `mvn -B verify` passes locally with Docker running and no skip flags.
 - Cloud SPI in `test-core`; one provider adapter, `test-cloud-aws`.
 - Four capabilities implemented against LocalStack: BlobStorage (S3), Queue (SQS), PubSub (SNS+SQS) and NoSqlTable (DynamoDB).
-- CI is GitHub Actions only. Both workflows trigger on `main`.
+- CI is GitHub Actions only. `build` (the full `verify`), `quality-gates` and `examples` (the Spring Boot and Quarkus projects) run on every pull request and on `main`. `release` runs when `pom.xml` changes on `main`, or by hand (ADR 0010). `claude` is the issue builder.
 
 ## What runs in a build
 
 | Suite | Runner | Count |
 | --- | --- | --- |
-| Unit tests | Surefire | 8 |
-| Integration tests against LocalStack | Failsafe | 6 |
+| Unit tests | Surefire | 26 (test-core 17, test-cloud-aws 4, test-feature 5) |
+| Integration tests against LocalStack | Failsafe | 14, in 7 classes |
 | Cucumber scenarios against LocalStack | Failsafe | 7 |
+
+Counted from the "Tests run" lines of `build` run 37221033703 on `main` (`d4f0f65`), 2026-10-04.
 
 Before September 2026 the integration tests and the Cucumber suite matched no configured plugin and had never executed. Wiring `maven-failsafe-plugin` exposed a genuine SQS failure against `localstack/localstack:2.3`, because AWS SDK v2 speaks the JSON protocol to SQS and that image does not serve it. The emulator image is now 3.8.
 
@@ -50,7 +52,7 @@ Floors are set to these measured values. The target of line 0.80 and branch 0.70
 
 ## Architecture decisions
 
-See `docs/adr/`: SPI for adapters (0001), emulator-first testing (0002), capability interfaces (0003), Cucumber integration (0004), dependency modernization (0005).
+See `docs/adr/`: SPI for adapters (0001), emulator-first testing (0002), capability interfaces (0003), Cucumber integration (0004), dependency modernization (0005), GitHub Pages disabled (0006), Java 17 kept (0007), packages moved to `com.enrichmeai` (0008), Maven Central through the Central Portal (0009), release on the merge of a release PR (0010), connection properties as a flat map (0011).
 
 ## Verifying locally
 

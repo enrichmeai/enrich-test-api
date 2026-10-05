@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-06-2026 22:10
-last_updated: 09-09-2026 12:43
+last_updated: 10-05-2026 12:00
 project: enrich-test-api
 project_key: NOKEY
 tracking_system: file-system
@@ -44,9 +44,9 @@ development_status:
   1-6-cover-the-remaining-test-core-classes: ready-for-dev
   epic-1-retrospective: optional
 
-  epic-2: in-progress
+  epic-2: done
   2-1-decide-whether-the-packages-move: done
-  2-2-execute-the-rename: review
+  2-2-execute-the-rename: done
   epic-2-retrospective: optional
 
   epic-3: backlog
@@ -72,18 +72,18 @@ development_status:
   epic-6: in-progress
   6-1-decide-the-fate-of-github-pages: done
   6-2-correct-the-misleading-gitignore-patterns: ready-for-dev
-  6-3-remove-the-inert-publishing-configuration: review
+  6-3-remove-the-inert-publishing-configuration: done
   6-4-decide-on-secrets-and-kms: backlog
   epic-6-retrospective: optional
 
-  epic-7: in-progress
-  7-1-track-topics-and-tables: review
-  7-2-make-failed-cleanup-visible: review
-  7-3-make-ensuretable-reject-a-table-whose-schema-does-not-match: review
+  epic-7: done
+  7-1-track-topics-and-tables: done
+  7-2-make-failed-cleanup-visible: done
+  7-3-make-ensuretable-reject-a-table-whose-schema-does-not-match: done
   epic-7-retrospective: optional
 
-  epic-8: backlog
-  8-1-choose-the-shape-of-the-connection-accessor: backlog
-  8-2-implement-the-accessor-for-the-aws-adapter: backlog
-  8-3-prove-it-with-a-framework-test: backlog
+  epic-8: done
+  8-1-choose-the-shape-of-the-connection-accessor: done
+  8-2-implement-the-accessor-for-the-aws-adapter: done
+  8-3-prove-it-with-a-framework-test: done
   epic-8-retrospective: optional

@@ -33,6 +33,27 @@ jobs:
       # the per-module JaCoCo coverage floors. No skip flags.
       - name: Build and test (full verify)
         run: mvn -B verify
+      # The coverage each module measured, as numbers in the log and the job summary, so
+      # STATUS.md and the coverage stories can quote a run instead of downloading the HTML.
+      - name: Coverage totals (JaCoCo)
+        if: always()
+        run: |
+          {
+            echo "| Module | Line | Branch |"
+            echo "| --- | --- | --- |"
+            for csv in */target/site/jacoco/jacoco.csv; do
+              [ -f "$csv" ] || continue
+              awk -F, -v m="${csv%%/*}" 'NR>1 {bm+=$6; bc+=$7; lm+=$8; lc+=$9}
+                END {printf "| %s | %d/%d, %.4f | %d/%d, %.4f |\n", m, lc, lc+lm, (lc+lm ? lc/(lc+lm) : 0), bc, bc+bm, (bc+bm ? bc/(bc+bm) : 0)}' "$csv"
+            done
+            echo
+            echo "Classes with uncovered branches (module, class, branches missed/total, lines missed/total):"
+            echo
+            for csv in */target/site/jacoco/jacoco.csv; do
+              [ -f "$csv" ] || continue
+              awk -F, -v m="${csv%%/*}" 'NR>1 && $6>0 {printf "- %s %s.%s: %d/%d branches, %d/%d lines\n", m, $2, $3, $6, $6+$7, $8, $8+$9}' "$csv"
+            done
+          } | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
