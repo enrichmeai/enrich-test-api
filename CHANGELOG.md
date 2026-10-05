@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed
+- `LocalStackHolder`'s start-once race moves to a package-private method so it can be tested
+  without Docker; the caller that loses the race now reads the winner straight back instead of an
+  unreachable spin-wait (Story 1.3, #32). No change for users.
+
+### Tests
+- `AwsClients` is covered in LIVE mode, where each client builds without credentials or a network
+  call, and for region defaulting; `LocalStackHolder` for its race and its entry points (Story 1.3,
+  #32).
+
 ## [0.3.0-alpha1] - 2026-10-04
 
 The first release to Maven Central: `com.enrichmeai:test-core` and `com.enrichmeai:test-cloud-aws`.
