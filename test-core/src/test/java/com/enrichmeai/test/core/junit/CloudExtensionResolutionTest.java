@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 
@@ -15,6 +16,8 @@ import com.enrichmeai.test.core.cloud.capability.PubSub;
 import com.enrichmeai.test.core.cloud.capability.Queue;
 import com.enrichmeai.test.core.junit.support.FakeCloudAdapter;
 import java.io.ByteArrayInputStream;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
@@ -26,6 +29,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionConfigurationException;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
@@ -91,12 +96,23 @@ class CloudExtensionResolutionTest {
         messages);
   }
 
+  /**
+   * Story 1.1, AC-1. JUnit never reaches this branch itself: {@code supportsParameter} answers
+   * false for a type the extension does not provide, so JUnit reports its own error first. The
+   * extension is therefore driven directly, with a {@code String} parameter and an empty store.
+   */
   @Test
-  void aParameterTypeTheExtensionDoesNotProvide_isNotResolvedByIt() {
-    TestExecutionSummary summary = launch(AsksForAString.class);
+  void resolvingATypeTheExtensionDoesNotProvide_failsNamingTheType() throws Exception {
+    CloudExtension extension = new CloudExtension();
+    ParameterContext parameter = parameterContext(Fixtures.class, "takesAString", String.class);
+    ExtensionContext context = emptyContext();
 
-    assertEquals(1, summary.getTestsFailedCount());
-    assertInstanceOf(ParameterResolutionException.class, onlyFailure(summary));
+    assertFalse(extension.supportsParameter(parameter, context));
+    ParameterResolutionException e =
+        assertThrows(
+            ParameterResolutionException.class,
+            () -> extension.resolveParameter(parameter, context));
+    assertTrue(e.getMessage().contains("java.lang.String"), e.getMessage());
   }
 
   @Test
@@ -128,6 +144,46 @@ class CloudExtensionResolutionTest {
         .collect(Collectors.joining("; "));
   }
 
+  /** Methods whose parameters stand in for a test method's, for driving the extension directly. */
+  static class Fixtures {
+    void takesAString(String notACapability) {}
+  }
+
+  private static ParameterContext parameterContext(Class<?> owner, String method, Class<?> type)
+      throws NoSuchMethodException {
+    Parameter p = owner.getDeclaredMethod(method, type).getParameters()[0];
+    return (ParameterContext)
+        Proxy.newProxyInstance(
+            CloudExtensionResolutionTest.class.getClassLoader(),
+            new Class<?>[] {ParameterContext.class},
+            (proxy, m, args) -> {
+              if (m.getName().equals("getParameter")) return p;
+              if (m.getName().equals("getIndex")) return 0;
+              throw new UnsupportedOperationException(m.getName());
+            });
+  }
+
+  /** An extension context whose store holds nothing, as before {@code beforeAll} has run. */
+  private static ExtensionContext emptyContext() {
+    ExtensionContext.Store store =
+        (ExtensionContext.Store)
+            Proxy.newProxyInstance(
+                CloudExtensionResolutionTest.class.getClassLoader(),
+                new Class<?>[] {ExtensionContext.Store.class},
+                (proxy, m, args) -> {
+                  if (m.getName().equals("get")) return null;
+                  throw new UnsupportedOperationException(m.getName());
+                });
+    return (ExtensionContext)
+        Proxy.newProxyInstance(
+            CloudExtensionResolutionTest.class.getClassLoader(),
+            new Class<?>[] {ExtensionContext.class},
+            (proxy, m, args) -> {
+              if (m.getName().equals("getStore")) return store;
+              throw new UnsupportedOperationException(m.getName());
+            });
+  }
+
   // ---- fixtures --------------------------------------------------------------------------------
 
   @ExtendWith(CloudExtension.class)
@@ -149,12 +205,6 @@ class CloudExtensionResolutionTest {
 
     @Test
     void table(NoSqlTable table) {}
-  }
-
-  @WithCloud(provider = CloudProvider.AWS, mode = CloudMode.EMULATOR)
-  static class AsksForAString {
-    @Test
-    void wantsAString(String notACapability) {}
   }
 
   @WithCloud(provider = CloudProvider.AWS, mode = CloudMode.EMULATOR)
