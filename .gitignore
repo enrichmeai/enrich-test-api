@@ -1,3 +1,4 @@
+# Inherited from a Spring project template (2018) and not audited against this layout.
 *.java.hsp
 *.sonarj
 *.sw*
@@ -37,10 +38,6 @@ out
 test-output
 atlassian-ide-plugin.xml
 .gradletasknamecache
-
-.gitignore
-src/main/resources/
-src/test/resources/
 
 # Python bytecode (scripts/release)
 __pycache__/
