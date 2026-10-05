@@ -106,27 +106,27 @@ These are the gates as the POM enforces them today.
 | Style | Checkstyle 3.6.0 | `verify` | Fails on violations. Rules are import hygiene only: unused, redundant and star imports. Main sources only. |
 | Build hygiene | Maven Enforcer | `validate` | Java 17 or above, and full dependency convergence. |
 | Coverage | JaCoCo | `verify` | Per-module floors, see below. |
-| Static analysis | Error Prone | `-Perrorprone` only | Findings at ERROR fail the build. Currently only WARN findings exist. |
+| Static analysis | Error Prone | `-Perrorprone` only | Findings at ERROR fail the build. |
 | Supply chain | OWASP Dependency-Check | `-Powasp` only | Not part of a plain `verify`; it needs an NVD API key. |
 
 ### Coverage floors
 
-JaCoCo floors are set per module to the ratios each module actually reaches. They are a ratchet against regression, not a target that has been met.
+JaCoCo floors are set per module (`test-core/pom.xml`, `test-cloud-aws/pom.xml`). They are a ratchet against regression, not a target that has been met. The measured coverage, with the run it comes from, is in [`STATUS.md`](STATUS.md#coverage); every `build` run prints it in its "Coverage totals (JaCoCo)" step.
 
-| Module | Line covered | Line floor | Branch covered | Branch floor |
-| --- | --- | --- | --- | --- |
-| test-core | 104/178, 0.58 | 0.58 | 14/46, 0.30 | 0.30 |
-| test-cloud-aws | 344/516, 0.66 | 0.66 | 81/228, 0.35 | 0.35 |
-| test-feature | no main sources | none | no main sources | none |
+| Module | Line floor | Branch floor |
+| --- | --- | --- |
+| test-core | 0.58 | 0.30 |
+| test-cloud-aws | 0.66 | 0.35 |
+| test-feature | none | none |
 
-The project target remains line 0.80 and branch 0.70. Neither module meets it. Raise the floors as tests are added; do not lower them.
+The project target is line 0.80 and branch 0.70. Raise the floors as tests are added; do not lower them.
 
 
 ## Continuous integration
 
-GitHub Actions, two workflows, both triggered on pushes and pull requests against `main`.
+GitHub Actions. `build.yml` and `quality-gates.yml` run on every pull request and on pushes to `main`; `examples.yml`, `release.yml` and `claude.yml` are described in `STATUS.md`.
 
-- `build.yml` runs `mvn -B verify` on an Ubuntu runner with Docker, then uploads the Surefire and Failsafe reports and the JaCoCo HTML.
+- `build.yml` runs `mvn -B verify` on an Ubuntu runner with Docker, prints each module's coverage, then uploads the Surefire and Failsafe reports and the JaCoCo HTML.
 - `quality-gates.yml` runs Spotless and Checkstyle, then Enforcer, then Error Prone, then the OWASP audit.
 
 The OWASP job is skipped unless an `NVD_API_KEY` secret is present on the repository, because Dependency-Check cannot build its database without one. The job annotates the run when it skips.
