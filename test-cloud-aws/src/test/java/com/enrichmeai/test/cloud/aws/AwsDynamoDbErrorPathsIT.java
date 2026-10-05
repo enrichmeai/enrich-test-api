@@ -175,7 +175,7 @@ class AwsDynamoDbErrorPathsIT {
     in.put("int", 42);
     in.put("long", 5_000_000_000L);
     in.put("double", 1.5);
-    in.put("exp", 1e3);
+    in.put("exp", 1e30); // Double.toString gives "1.0E30": the exponent path
     in.put("bool", true);
     in.put("bytes", bytes);
     in.put("other", uuid); // not a known type: stored as its toString()
@@ -192,7 +192,7 @@ class AwsDynamoDbErrorPathsIT {
     assertEquals(5_000_000_000L, out.get("long"));
     assertEquals(1.5, out.get("double"));
     assertTrue(out.get("exp") instanceof Number, String.valueOf(out.get("exp")));
-    assertEquals(1000.0, ((Number) out.get("exp")).doubleValue());
+    assertEquals(1e30, ((Number) out.get("exp")).doubleValue());
     assertEquals(true, out.get("bool"));
     assertArrayEquals(bytes, (byte[]) out.get("bytes"));
     assertEquals(uuid.toString(), out.get("other"));
