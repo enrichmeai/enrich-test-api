@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Tests
+- `AwsBlobStorage`, `AwsPubSub` and `AwsQueue` are covered on buckets in and outside us-east-1,
+  reads and deletes of what is not there, a failing input stream, publishing to a topic not yet
+  created, and an empty receive (Story 1.5, #33).
+
 ## [0.3.0-alpha1] - 2026-10-04
 
 The first release to Maven Central: `com.enrichmeai:test-core` and `com.enrichmeai:test-cloud-aws`.
