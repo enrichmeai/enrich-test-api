@@ -36,7 +36,9 @@ jobs:
       # The coverage each module measured, as numbers in the log and the job summary, so
       # STATUS.md and the coverage stories can quote a run instead of downloading the HTML.
       - name: Coverage totals (JaCoCo)
-        if: always()
+        # Not after a cancelled run, and never the reason a job fails: it only reports.
+        if: success() || failure()
+        continue-on-error: true
         run: |
           {
             echo "| Module | Line | Branch |"
