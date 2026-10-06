@@ -1,1 +1,2 @@
 com.enrichmeai.test.core.junit.support.FakeCloudAdapter
+com.enrichmeai.test.core.junit.support.MisconfiguredCloudAdapter

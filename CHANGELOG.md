@@ -8,6 +8,16 @@
   unreachable spin-wait (Story 1.3, #32). No change for users.
 
 ### Tests
+- `CloudExtension` is covered on the paths a user meets when something is missing: a class with no
+  `@WithCloud`, an adapter that supports no capability (each parameter fails naming it), and a
+  parameter type the extension does not provide (Story 1.1, #30).
+- `CloudAdapters` and `TestCloudConfig` are covered: the adapter lookup, its failure naming the
+  provider and module, a registered adapter whose `provider()` throws, and a config that reads back
+  every field and cannot be changed after it is built. Every `CloudServiceType` value round-trips
+  through its name (Story 1.6, #34).
+- `AwsDynamoDB` is covered on missing tables and keys, partition-only and composite keys, deletes
+  of what is not there, empty tables, results across more than one page, and every value type it
+  marshals (Story 1.2, #31).
 - `AwsClients` is covered in LIVE mode, where each client builds without credentials or a network
   call, and for region defaulting; `LocalStackHolder` for its race and its entry points (Story 1.3,
   #32).
