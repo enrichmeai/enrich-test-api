@@ -21,6 +21,9 @@
 - `AwsClients` is covered in LIVE mode, where each client builds without credentials or a network
   call, and for region defaulting; `LocalStackHolder` for its race and its entry points (Story 1.3,
   #32).
+- `AwsBlobStorage`, `AwsPubSub` and `AwsQueue` are covered on buckets in and outside us-east-1,
+  reads and deletes of what is not there, a failing input stream, publishing to a topic not yet
+  created, two topics whose names share a suffix, and an empty receive (Story 1.5, #33).
 
 ## [0.3.0-alpha1] - 2026-10-04
 
