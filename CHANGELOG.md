@@ -6,6 +6,9 @@
 - `LocalStackHolder`'s start-once race moves to a package-private method so it can be tested
   without Docker; the caller that loses the race now reads the winner straight back instead of an
   unreachable spin-wait (Story 1.3, #32). No change for users.
+- The JaCoCo floors rise to what Epic 1's tests measure: test-core 1.00 line / 1.00 branch (was
+  0.58 / 0.30), test-cloud-aws 0.92 / 0.74 (was 0.66 / 0.35). Both modules now meet the 0.80 / 0.70
+  target (Story 1.4, #37).
 
 ### Tests
 - `CloudExtension` is covered on the paths a user meets when something is missing: a class with no

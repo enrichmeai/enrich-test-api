@@ -73,12 +73,12 @@
             </plugin>
 
             <!--
-              Coverage floor. These are the ratios this module ACTUALLY achieves today,
-              measured by `mvn -B clean verify` with Docker running on 2026-09-06:
-                  LINE   344/516 = 0.66   BRANCH 81/228 = 0.35
-              They are a ratchet against regression, NOT the project target. The target
-              remains LINE 0.80 / BRANCH 0.70, which this module does not currently meet.
-              Raise these numbers as tests are added; never lower them.
+              Coverage floor. These are the ratios this module ACTUALLY achieves, measured by
+              the "Coverage totals" step of `build` run 37501463684 on main (fcc90a4), 2026-10-06,
+              unit and LocalStack integration tests together:
+                  LINE   495/535 = 0.9252   BRANCH 179/240 = 0.7458
+              truncated to two places. The project target (LINE 0.80 / BRANCH 0.70) is met.
+              They are a ratchet against regression: raise them as tests are added, never lower them.
             -->
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -98,12 +98,12 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.66</minimum>
+                                            <minimum>0.92</minimum>
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.35</minimum>
+                                            <minimum>0.74</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

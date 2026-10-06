@@ -115,11 +115,11 @@ JaCoCo floors are set per module (`test-core/pom.xml`, `test-cloud-aws/pom.xml`)
 
 | Module | Line floor | Branch floor |
 | --- | --- | --- |
-| test-core | 0.58 | 0.30 |
-| test-cloud-aws | 0.66 | 0.35 |
+| test-core | 1.00 | 1.00 |
+| test-cloud-aws | 0.92 | 0.74 |
 | test-feature | none | none |
 
-The project target is line 0.80 and branch 0.70. Raise the floors as tests are added; do not lower them.
+The project target is line 0.80 and branch 0.70, and both modules meet it. Raise the floors as tests are added; do not lower them.
 
 
 ## Continuous integration
