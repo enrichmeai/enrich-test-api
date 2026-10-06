@@ -22,6 +22,7 @@ public final class FakeCloudAdapter implements CloudAdapter {
   private static volatile FakeQueue queue = new FakeQueue();
   private static volatile FakePubSub pubSub = new FakePubSub();
   private static volatile FakeNoSqlTable noSqlTable = new FakeNoSqlTable();
+  private static volatile boolean capabilitiesAbsent;
 
   private TestCloudConfig config;
 
@@ -31,6 +32,15 @@ public final class FakeCloudAdapter implements CloudAdapter {
     queue = new FakeQueue();
     pubSub = new FakePubSub();
     noSqlTable = new FakeNoSqlTable();
+    capabilitiesAbsent = false;
+  }
+
+  /**
+   * Makes every capability accessor return {@code null}, as an adapter that supports none of them
+   * would. {@link #reset()} turns it off.
+   */
+  public static void withoutCapabilities() {
+    capabilitiesAbsent = true;
   }
 
   public static FakeBlobStorage blobStorageFake() {
@@ -49,6 +59,11 @@ public final class FakeCloudAdapter implements CloudAdapter {
     return noSqlTable;
   }
 
+  /** The config this adapter was last initialised with, or {@code null} before the first call. */
+  public TestCloudConfig config() {
+    return config;
+  }
+
   @Override
   public CloudProvider provider() {
     // Use AWS as the provider so @WithCloud(provider=AWS) can resolve this adapter in unit tests
@@ -57,26 +72,26 @@ public final class FakeCloudAdapter implements CloudAdapter {
 
   @Override
   public void initialize(TestCloudConfig config) {
-    this.config = config; // not used but kept for parity
+    this.config = config;
   }
 
   @Override
   public BlobStorage blobStorage() {
-    return blobStorage;
+    return capabilitiesAbsent ? null : blobStorage;
   }
 
   @Override
   public Queue queue() {
-    return queue;
+    return capabilitiesAbsent ? null : queue;
   }
 
   @Override
   public PubSub pubSub() {
-    return pubSub;
+    return capabilitiesAbsent ? null : pubSub;
   }
 
   @Override
   public NoSqlTable noSqlTable() {
-    return noSqlTable;
+    return capabilitiesAbsent ? null : noSqlTable;
   }
 }

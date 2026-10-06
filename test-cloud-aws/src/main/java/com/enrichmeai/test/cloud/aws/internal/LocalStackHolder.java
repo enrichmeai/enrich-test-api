@@ -4,6 +4,8 @@
 package com.enrichmeai.test.cloud.aws.internal;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.testcontainers.localstack.LocalStackContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -21,30 +23,40 @@ public final class LocalStackHolder {
   private LocalStackHolder() {}
 
   public static LocalStackContainer ensureStartedS3() {
-    LocalStackContainer existing = REF.get();
+    return ensureStarted(
+        REF,
+        () -> {
+          LocalStackContainer container =
+              new LocalStackContainer(LOCALSTACK_IMAGE)
+                  .withServices("s3", "sqs", "sns", "dynamodb");
+          // Let Testcontainers manage lifecycle (stop on JVM shutdown)
+          container.start();
+          return container;
+        },
+        LocalStackContainer::stop);
+  }
+
+  /**
+   * Returns the instance in {@code ref}, starting one with {@code start} if there is none. When two
+   * callers race, both may start an instance; the one whose compare-and-set loses stops its own and
+   * returns the winner's.
+   *
+   * <p>The winner is read straight back: a failed compare-and-set means {@code ref} already held a
+   * value, and nothing ever clears it. (The spin-wait that used to follow could not be reached.)
+   *
+   * <p>Package-private so the race can be tested without Docker (Story 1.3).
+   */
+  static <C> C ensureStarted(AtomicReference<C> ref, Supplier<C> start, Consumer<C> stop) {
+    C existing = ref.get();
     if (existing != null) {
       return existing;
     }
-    LocalStackContainer container =
-        new LocalStackContainer(LOCALSTACK_IMAGE).withServices("s3", "sqs", "sns", "dynamodb");
-    // Let Testcontainers manage lifecycle (stop on JVM shutdown)
-    container.start();
-    if (!REF.compareAndSet(null, container)) {
-      // Another thread won the race; stop ours and wait for the winner
-      container.stop();
-      LocalStackContainer winner;
-      int spins = 0;
-      do {
-        winner = REF.get();
-        if (winner != null) return winner;
-        try {
-          Thread.sleep(10);
-        } catch (InterruptedException ignored) {
-        }
-      } while (++spins < 50);
-      throw new IllegalStateException("LocalStack container race: winner not visible");
+    C started = start.get();
+    if (ref.compareAndSet(null, started)) {
+      return started;
     }
-    return container;
+    stop.accept(started);
+    return ref.get();
   }
 
   public static LocalStackContainer ensureStartedSns() {
