@@ -10,6 +10,9 @@
   provider and module, a registered adapter whose `provider()` throws, and a config that reads back
   every field and cannot be changed after it is built. Every `CloudServiceType` value round-trips
   through its name (Story 1.6, #34).
+- `AwsDynamoDB` is covered on missing tables and keys, partition-only and composite keys, deletes
+  of what is not there, empty tables, results across more than one page, and every value type it
+  marshals (Story 1.2, #31).
 
 ## [0.3.0-alpha1] - 2026-10-04
 
