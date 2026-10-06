@@ -3,10 +3,13 @@
 ## [Unreleased]
 
 ### Tests
+- `CloudExtension` is covered on the paths a user meets when something is missing: a class with no
+  `@WithCloud`, an adapter that supports no capability (each parameter fails naming it), and a
+  parameter type the extension does not provide (Story 1.1, #30).
 - `CloudAdapters` and `TestCloudConfig` are covered: the adapter lookup, its failure naming the
   provider and module, a registered adapter whose `provider()` throws, and a config that reads back
-  every field and cannot be changed after it is built, and every `CloudServiceType` value
-  round-trips through its name (Story 1.6, #34).
+  every field and cannot be changed after it is built. Every `CloudServiceType` value round-trips
+  through its name (Story 1.6, #34).
 
 ## [0.3.0-alpha1] - 2026-10-04
 
