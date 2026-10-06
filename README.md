@@ -111,7 +111,7 @@ These are the gates as the POM enforces them today.
 
 ### Coverage floors
 
-JaCoCo floors are set per module (`test-core/pom.xml`, `test-cloud-aws/pom.xml`). They are a ratchet against regression, not a target that has been met. The measured coverage, with the run it comes from, is in [`STATUS.md`](STATUS.md#coverage); every `build` run prints it in its "Coverage totals (JaCoCo)" step.
+JaCoCo floors are set per module (`test-core/pom.xml`, `test-cloud-aws/pom.xml`). They are a ratchet against regression: each is the coverage the module measures, so a change that lowers coverage fails the build. The measured coverage, with the run it comes from, is in [`STATUS.md`](STATUS.md#coverage); every `build` run prints it in its "Coverage totals (JaCoCo)" step.
 
 | Module | Line floor | Branch floor |
 | --- | --- | --- |
