@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-10-05
+Last updated: 2026-10-06
 
 ## Snapshot
 
@@ -14,11 +14,11 @@ Last updated: 2026-10-05
 
 | Suite | Runner | Count |
 | --- | --- | --- |
-| Unit tests | Surefire | 26 (test-core 17, test-cloud-aws 4, test-feature 5) |
-| Integration tests against LocalStack | Failsafe | 14, in 7 classes |
+| Unit tests | Surefire | 49 (test-core 32, test-cloud-aws 12, test-feature 5) |
+| Integration tests against LocalStack | Failsafe | 29, in 10 classes |
 | Cucumber scenarios against LocalStack | Failsafe | 7 |
 
-Counted from the "Tests run" lines of `build` run 37221033703 on `main` (`d4f0f65`), 2026-10-04.
+Counted from the "Tests run" lines of `build` run 37501463684 on `main` (`fcc90a4`), 2026-10-06.
 
 Before September 2026 the integration tests and the Cucumber suite matched no configured plugin and had never executed. Wiring `maven-failsafe-plugin` exposed a genuine SQS failure against `localstack/localstack:2.3`, because AWS SDK v2 speaks the JSON protocol to SQS and that image does not serve it. The emulator image is now 3.8.
 
@@ -29,7 +29,7 @@ Before September 2026 the integration tests and the Cucumber suite matched no co
 | Spotless, google-java-format | `verify` | Fails on deviation |
 | Checkstyle 3.6.0 | `verify` | Fails on violation; import hygiene rules only, main sources |
 | Maven Enforcer | `validate` | Java 17+, dependency convergence |
-| JaCoCo | `verify` | Per-module floors, set 2026-09-06; below today's measured values (see Coverage) |
+| JaCoCo | `verify` | Per-module floors at the measured values, truncated to two places (see Coverage) |
 | Error Prone | `-Perrorprone` | ERROR findings fail; the `Error Prone` job is green in `quality-gates` run 37358430621 |
 | OWASP Dependency-Check | `-Powasp` | Excluded from a plain `verify`; needs an NVD API key |
 
@@ -37,11 +37,11 @@ Before September 2026 the integration tests and the Cucumber suite matched no co
 
 | Module | Line | Branch |
 | --- | --- | --- |
-| test-core | 190/224, 0.85 | 28/42, 0.67 |
-| test-cloud-aws | 395/539, 0.73 | 110/244, 0.45 |
+| test-core | 224/224, 1.00 | 42/42, 1.00 |
+| test-cloud-aws | 495/535, 0.93 | 179/240, 0.75 |
 | test-feature | no main sources | no main sources |
 
-Read from the "Coverage totals (JaCoCo)" step of `build` run 37358430480 (`6bace26`, a docs and CI change on top of `d4f0f65`, so the same library code), 2026-10-05. The floors in the POMs (test-core 0.58 / 0.30, test-cloud-aws 0.66 / 0.35) were set in September and are now below these values; Story 1.4 (#37) raises them once Epic 1's tests land. The target of line 0.80 and branch 0.70 is met for test-core lines only. The largest gaps are `AwsDynamoDB` (76 of 138 branches uncovered), `AwsBlobStorage` (28 of 40) and `AwsPubSub` (16 of 26) in test-cloud-aws, and `CloudExtension` (12 of 38) in test-core.
+Read from the "Coverage totals (JaCoCo)" step of `build` run 37501463684 on `main` (`fcc90a4`), 2026-10-06, after Epic 1's tests (#30–#34). Both modules meet the target of line 0.80 and branch 0.70. The floors in the POMs are these values truncated to two places (test-core 1.00 / 1.00, test-cloud-aws 0.92 / 0.74; Story 1.4, #37). What test-cloud-aws still misses is mostly provider-error paths that LocalStack does not produce on demand: `AwsDynamoDB` (31 of 138 branches), `AwsBlobStorage` (14 of 40), `AwsPubSub` (12 of 26) and `AwsQueue`'s warm-up retries (4 of 10).
 
 ## Known limitations
 

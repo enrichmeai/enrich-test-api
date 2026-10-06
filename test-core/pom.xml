@@ -35,12 +35,12 @@
     <build>
         <plugins>
             <!--
-              Coverage floor. These are the ratios this module ACTUALLY achieves today,
-              measured by `mvn -B clean verify` on 2026-09-06:
-                  LINE   104/178 = 0.58   BRANCH 14/46 = 0.30
-              They are a ratchet against regression, NOT the project target. The target
-              remains LINE 0.80 / BRANCH 0.70, which this module does not currently meet.
-              Raise these numbers as tests are added; never lower them.
+              Coverage floor. These are the ratios this module ACTUALLY achieves, measured by
+              the "Coverage totals" step of `build` run 37501463684 on main (fcc90a4), 2026-10-06:
+                  LINE   224/224 = 1.00   BRANCH 42/42 = 1.00
+              Every line and branch is covered (Epic 1), so the floor is the whole module: new
+              code in test-core arrives with its tests or the build fails. The project target
+              (LINE 0.80 / BRANCH 0.70) is met. Never lower these numbers.
             -->
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -60,12 +60,12 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.58</minimum>
+                                            <minimum>1.00</minimum>
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.30</minimum>
+                                            <minimum>1.00</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
