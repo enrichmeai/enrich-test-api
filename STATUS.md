@@ -4,7 +4,7 @@ Last updated: 2026-10-06
 
 ## Snapshot
 
-- `0.3.0-alpha1` is on Maven Central (published 2026-10-04, ADR 0009, 0010): `com.enrichmeai:test-core` and `com.enrichmeai:test-cloud-aws`. `main` is `0.3.0-alpha2-SNAPSHOT`.
+- `0.3.0-alpha1` is on Maven Central (published 2026-10-04, ADR 0009, 0010): `com.enrichmeai:test-core` and `com.enrichmeai:test-cloud-aws`. `main` is `0.3.0-alpha2`, the second release, uploaded to the Central Portal when its release PR merges.
 - Java 17, Maven multi-module. `mvn -B verify`, with Docker and no skip flags, is green on `main` in `build` run 37221033703 (`d4f0f65`).
 - Cloud SPI in `test-core`; one provider adapter, `test-cloud-aws`.
 - Four capabilities implemented against LocalStack: BlobStorage (S3), Queue (SQS), PubSub (SNS+SQS) and NoSqlTable (DynamoDB).

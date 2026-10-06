@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.3.0-alpha2] - 2026-10-06
+
+No API change from 0.3.0-alpha1. This release is about proof: Epic 1's tests bring test-core to full
+line and branch coverage and test-cloud-aws to 0.93 line / 0.75 branch, past the 0.80 / 0.70 target,
+and the build now enforces those numbers.
+
 ### Changed
 - `LocalStackHolder`'s start-once race moves to a package-private method so it can be tested
   without Docker; the caller that loses the race now reads the winner straight back instead of an
