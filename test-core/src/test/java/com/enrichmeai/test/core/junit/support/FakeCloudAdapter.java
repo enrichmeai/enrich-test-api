@@ -59,6 +59,11 @@ public final class FakeCloudAdapter implements CloudAdapter {
     return noSqlTable;
   }
 
+  /** The config this adapter was last initialised with, or {@code null} before the first call. */
+  public TestCloudConfig config() {
+    return config;
+  }
+
   @Override
   public CloudProvider provider() {
     // Use AWS as the provider so @WithCloud(provider=AWS) can resolve this adapter in unit tests
@@ -67,7 +72,7 @@ public final class FakeCloudAdapter implements CloudAdapter {
 
   @Override
   public void initialize(TestCloudConfig config) {
-    this.config = config; // not used but kept for parity
+    this.config = config;
   }
 
   @Override
