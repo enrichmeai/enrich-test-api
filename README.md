@@ -20,7 +20,7 @@ Status: early-stage private alpha. AWS is the only provider, and only in emulato
 | --- | --- |
 | groupId | `com.enrichmeai` |
 | artifactId | `enrich-test-api` (parent) |
-| version | `0.3.0-alpha2` on `main`, released when this version reaches Maven Central; `0.3.0-alpha1` on Maven Central (2026-10-04) |
+| version | `0.3.0-alpha2` released on Maven Central (2026-10-07); `0.3.0-alpha3-SNAPSHOT` on `main` |
 | modules | `test-core`, `test-cloud-aws`, `test-feature` |
 
 The Java packages are `com.enrichmeai.*`, matching the groupId. They were `org.deveasy.*`

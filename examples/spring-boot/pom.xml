@@ -25,7 +25,7 @@
     <properties>
         <java.version>17</java.version>
         <!-- The workflow passes the reactor's version; outside it, use a released one. -->
-        <enrich-test-api.version>0.3.0-alpha1</enrich-test-api.version>
+        <enrich-test-api.version>0.3.0-alpha2</enrich-test-api.version>
         <aws.sdk.v2.version>2.25.64</aws.sdk.v2.version>
     </properties>
 
