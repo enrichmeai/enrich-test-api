@@ -182,8 +182,16 @@ culvert's); this is the operator's view.
    gpg --quick-gen-key "enrichmeai release <release@your-domain>" rsa4096 sign 2y
    gpg --list-keys --keyid-format long          # note the key id
    gpg --keyserver keyserver.ubuntu.com --send-keys <key id>
-   gpg --armor --export-secret-keys <key id> | gh secret set MAVEN_GPG_PRIVATE_KEY
-   gh secret set MAVEN_GPG_PASSPHRASE            # the passphrase you chose
+   # Export to a file first and check it. Piping straight into `gh secret set` risks storing a
+   # truncated or empty secret if the export fails — and a GPG export does fail without a TTY,
+   # with "Inappropriate ioctl for device" — after which the release fails at signing with
+   # nothing pointing at the cause.
+   umask 077; key=$(mktemp)
+   gpg --armor --export-secret-keys <key id> > "$key"
+   head -1 "$key"                               # must read BEGIN PGP PRIVATE KEY BLOCK
+   gh secret set MAVEN_GPG_PRIVATE_KEY < "$key"
+   rm -f "$key"
+   gh secret set MAVEN_GPG_PASSPHRASE            # prompts; keeps it out of your shell history
    ```
 3. Optionally, add required reviewers to the `maven-central` environment for a second gate.
 

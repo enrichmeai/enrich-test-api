@@ -66,16 +66,34 @@ they were never shipped.
 
 None of these can be done from the repository; all of them are the maintainer's.
 
-1. The `com.enrichmeai` namespace is verified on `central.sonatype.com`. Verification for a
-   domain-based groupId is a TXT record on `enrichmeai.com`; the domain already carries a
-   ten-character TXT record of the shape the Portal issues, which suggests this has been done,
-   but only the Portal account can confirm it.
+1. ~~The `com.enrichmeai` namespace is verified on `central.sonatype.com`.~~ **Settled: it is.**
+   This was written as an unknown, on the strength of a TXT record on `enrichmeai.com` that merely
+   looked like a Portal verification key. It is now proven from the other end: `culvert` has
+   published more than twenty artifacts under `com.enrichmeai.culvert.*`, live at
+   `repo1.maven.org/maven2/com/enrichmeai/`. Namespace verification covers subgroups, so
+   `com.enrichmeai:enrich-test-api` is covered by the same verification.
 2. A Portal **user token** (not the account password) exists, stored as the repository secrets
-   `MAVEN_CENTRAL_USERNAME` and `MAVEN_CENTRAL_PASSWORD`.
+   `CENTRAL_USERNAME` and `CENTRAL_PASSWORD`.
 3. A GPG key exists for signing, its public half is on `keyserver.ubuntu.com` (Central checks
    signatures against public keyservers), and the ASCII-armoured private key and its passphrase
-   are the repository secrets `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE`.
-4. The tag is on a commit that is green on both existing workflows.
+   are the repository secrets `MAVEN_GPG_PRIVATE_KEY` and `MAVEN_GPG_PASSPHRASE`.
+4. The release commit is green on both existing workflows.
+
+**The four names are culvert's**, so one Portal token and one signing key serve both repositories.
+That is also the argument for holding them as organisation secrets rather than per repository: a
+value that exists once cannot drift, and nothing has to be copied when a third repository needs it.
+The workflow still reads the earlier names (`MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`,
+`GPG_PRIVATE_KEY`, `GPG_PASSPHRASE`) as a fallback, so a repository holding the old set keeps
+working.
+
+**A GitHub secret cannot be read back through the API or `gh`**, so there is no command that copies
+one repository's secrets to another. A *workflow running inside* culvert can read them, though —
+they are ordinary `secrets.*` references there — and can write them onward with
+`gh secret set --repo enrichmeai/enrich-test-api`, given a token carrying secrets-write on the
+target. Values stay masked in the log. That is the one path that copies the existing token and key
+rather than minting new ones, which matters because generating a fresh Portal user token may revoke
+the one culvert publishes with. Holding the four as organisation secrets avoids the question
+entirely: nothing is copied, and a third repository is granted access rather than provisioned.
 
 The README's "Releasing" section carries the commands.
 
